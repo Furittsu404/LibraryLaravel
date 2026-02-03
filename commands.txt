@@ -1,0 +1,8 @@
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+composer require livewire/livewire
+npm install tailwindcss @tailwindcss/vite
+composer require rappasoft/laravel-livewire-tables

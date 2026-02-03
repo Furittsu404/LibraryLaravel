@@ -1,0 +1,244 @@
+-- ============================================================================
+-- ATTENDANCE DATA MIGRATION SQL COMMANDS (REVISED)
+-- ============================================================================
+-- This file contains SQL commands to migrate attendance data from
+-- attendance_records table into attendance table, inferring logout times
+-- based on the next login record for each user on the same day.
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- STEP 1: Add login_time column to attendance_records table
+-- ----------------------------------------------------------------------------
+-- Add the new nullable login_time column
+ALTER TABLE attendance_records
+ADD COLUMN login_time DATETIME NULL;
+
+-- Combine date_login and time_login into login_time
+UPDATE attendance_records
+SET login_time = CONCAT(date_login, ' ', time_login)
+WHERE date_login IS NOT NULL AND time_login IS NOT NULL;
+
+-- Optional: Check progress
+SELECT COUNT(*) FROM attendance_records WHERE login_time IS NULL;
+
+
+-- ----------------------------------------------------------------------------
+-- STEP 2: Clear and populate attendance table with inferred logout times
+-- ----------------------------------------------------------------------------
+-- Clear the attendance table first if you need to redo it
+TRUNCATE TABLE attendance;
+
+-- Insert attendance records with logout times inferred from next login
+INSERT INTO attendance (user_id, login_time, logout_time, created_at)
+SELECT
+    user_id,
+    login_time,
+    COALESCE(
+        next_login_time,
+        CONCAT(DATE(login_time), ' 17:00:00')
+    ) as logout_time,
+    login_time as created_at
+FROM (
+    SELECT
+        user_id,
+        login_time,
+        LEAD(login_time) OVER (
+            PARTITION BY user_id, DATE(login_time)
+            ORDER BY login_time
+        ) as next_login_time,
+        ROW_NUMBER() OVER (
+            PARTITION BY user_id, DATE(login_time)
+            ORDER BY login_time
+        ) as login_sequence
+    FROM attendance_records
+    WHERE login_time IS NOT NULL
+) subquery
+-- Only keep records where there's a gap to the next login or it's the last login of the day
+WHERE next_login_time IS NULL
+   OR TIMESTAMPDIFF(MINUTE, login_time, next_login_time) >= 5
+ORDER BY user_id, login_time;
+
+
+-- ----------------------------------------------------------------------------
+-- STEP 3: Verification Queries
+-- ----------------------------------------------------------------------------
+-- Check the results
+SELECT COUNT(*) as total_records FROM attendance;
+
+-- Check for records without logout_time (should be 0)
+SELECT COUNT(*) as records_without_logout FROM attendance WHERE logout_time IS NULL;
+
+-- View sample data to verify
+SELECT
+    user_id,
+    login_time,
+    logout_time,
+    TIMESTAMPDIFF(MINUTE, login_time, logout_time) as duration_minutes
+FROM attendance
+ORDER BY user_id, login_time
+LIMIT 50;
+
+-- Check statistics
+SELECT
+    COUNT(*) as total_records,
+    AVG(TIMESTAMPDIFF(MINUTE, login_time, logout_time)) as avg_duration_minutes,
+    MAX(TIMESTAMPDIFF(MINUTE, login_time, logout_time)) as max_duration_minutes,
+    MIN(TIMESTAMPDIFF(MINUTE, login_time, logout_time)) as min_duration_minutes
+FROM attendance;
+
+-- Check for any anomalies (logout before login - should be 0)
+SELECT COUNT(*) as invalid_records
+FROM attendance
+WHERE logout_time < login_time;
+
+-- View users with multiple logins on the same day (to verify logic)
+SELECT
+    user_id,
+    DATE(login_time) as date,
+    login_time,
+    logout_time,
+    TIMESTAMPDIFF(MINUTE, login_time, logout_time) as duration_minutes
+FROM attendance
+WHERE user_id IN (
+    SELECT user_id
+    FROM attendance
+    GROUP BY user_id, DATE(login_time)
+    HAVING COUNT(*) > 1
+)
+ORDER BY user_id, login_time
+LIMIT 100;
+
+
+-- ----------------------------------------------------------------------------
+-- ALTERNATIVE: If you want ALL login records (including very close ones)
+-- ----------------------------------------------------------------------------
+-- Use this version if you want to capture every single login, even if they're
+-- just seconds apart. The version above filters out logins that are within
+-- 5 minutes of each other to avoid capturing accidental double-scans.
+
+TRUNCATE TABLE attendance;
+
+ INSERT INTO attendance (user_id, login_time, logout_time, created_at)
+ SELECT
+     user_id,
+     login_time,
+     COALESCE(
+         next_login_time,
+         CONCAT(DATE(login_time), ' 17:00:00')
+     ) as logout_time,
+     login_time as created_at
+ FROM (
+     SELECT
+         user_id,
+         login_time,
+         LEAD(login_time) OVER (
+             PARTITION BY user_id, DATE(login_time)
+             ORDER BY login_time
+         ) as next_login_time
+     FROM attendance_records
+     WHERE login_time IS NOT NULL
+ ) subquery
+ ORDER BY user_id, login_time;
+
+
+-- ----------------------------------------------------------------------------
+-- OPTIONAL: Drop old columns after verification
+-- ----------------------------------------------------------------------------
+-- Only run these after verifying all data is correct!
+-- ALTER TABLE attendance_records DROP COLUMN date_login, DROP COLUMN time_login;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- ----------------------------------------------------------------------------
+-- EVENT SCHEDULERS
+-- ----------------------------------------------------------------------------
+
+-- AutoLogoutUsers:
+DELIMITER $$
+
+CREATE EVENT auto_logout_users
+ON SCHEDULE EVERY 1 MINUTE
+DO
+BEGIN
+    DECLARE logout_time_setting VARCHAR(5);
+    DECLARE current_time_str VARCHAR(5);
+    DECLARE logout_datetime DATETIME;
+
+    -- Get the configured auto-logout time from settings table
+    SELECT value INTO logout_time_setting
+    FROM settings
+    WHERE `key` = 'auto_logout_time'
+    LIMIT 1;
+
+    -- Get current time in HH:MM format
+    SET current_time_str = DATE_FORMAT(NOW(), '%H:%i');
+
+    -- Check if current time matches the logout time
+    IF current_time_str = logout_time_setting THEN
+        -- Build the logout datetime (today's date + configured time)
+        SET logout_datetime = CONCAT(CURDATE(), ' ', logout_time_setting);
+
+        -- Update all attendance records that don't have a logout_time yet
+        -- Only update if their login_time is today
+        UPDATE attendance
+        SET logout_time = logout_datetime
+        WHERE logout_time IS NULL
+        AND DATE(login_time) = CURDATE();
+    END IF;
+END$$
+
+DELIMITER ;
+--
+
+-- AutoDeleteOldAttendance
+CREATE EVENT AutoDeleteOldAttendance
+ON SCHEDULE EVERY 1 DAY
+STARTS CONCAT(CURDATE() + INTERVAL 1 DAY, ' 08:15:00')
+DO
+DELETE FROM attendance
+WHERE created_at < DATE_SUB(CURDATE(), INTERVAL 4 YEAR);
+--
+
+-- AutoDeleteOldUsersArchive
+CREATE EVENT AutoDeleteOldUsersArchive
+ON SCHEDULE EVERY 1 DAY
+STARTS CONCAT(CURDATE() + INTERVAL 1 DAY, ' 08:15:00')
+DO
+DELETE FROM users_archive
+WHERE created_at < DATE_SUB(CURDATE(), INTERVAL 4 YEAR);
+--
+
+-- AutoArchiveExpiredUsers
+CREATE EVENT AutoArchiveExpiredUsers
+ON SCHEDULE EVERY 1 DAY
+STARTS CONCAT(CURDATE() + INTERVAL 1 DAY, ' 08:05:00')
+DO
+INSERT INTO users_archive (lname, fname, mname, email, phonenumber, sex, address, course, section, barcode, user_status, user_type, account_status, expiration_date, archived_at, created_at, updated_at)
+SELECT lname, fname, mname, email, phonenumber, sex, address, course, section, barcode, user_status, user_type, account_status, expiration_date, NOW(), created_at, updated_at
+FROM users
+WHERE expiration_date < CURDATE()
+AND barcode NOT IN (SELECT barcode FROM users_archive WHERE barcode IS NOT NULL);
+--
+
+-- AutoDeleteArchivedUsers
+CREATE EVENT AutoDeleteArchivedUsers
+ON SCHEDULE EVERY 1 DAY
+STARTS CONCAT(CURDATE() + INTERVAL 1 DAY, ' 08:06:00')
+DO
+DELETE FROM users
+WHERE expiration_date < CURDATE()
+AND barcode IN (SELECT barcode FROM users_archive);
+--
