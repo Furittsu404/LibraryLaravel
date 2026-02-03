@@ -140,21 +140,29 @@
                     </div>
 
                     <!-- Room Reservation Card -->
-                    <div class="mt-6 bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-md border border-green-400 p-6 text-white">
+                    <div
+                        class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                         <div class="flex items-start gap-4">
                             <div class="flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                                </svg>
+                                <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-green-600">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                    </svg>
+                                </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-xl font-bold mb-2">Need to Reserve a Room?</h3>
-                                <p class="text-green-50 text-sm mb-4">Book discussion rooms, study areas, and conference spaces easily online.</p>
-                                <a href="{{ route('student.reservations') }}" 
-                                   class="inline-flex items-center gap-2 bg-white text-green-600 font-semibold px-6 py-3 rounded-lg hover:bg-green-50 transition-colors shadow-md hover:shadow-lg">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-1">Need to Reserve a Room?</h3>
+                                <p class="text-gray-600 text-sm mb-4">Book discussion rooms, study areas, and conference
+                                    spaces easily online.</p>
+                                <a href="{{ route('student.reservations') }}"
+                                    class="inline-flex items-center gap-2 bg-green-600 text-white font-medium px-5 py-2.5 rounded-lg hover:bg-green-700 transition-colors">
                                     <span>Reserve Now</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                                     </svg>
                                 </a>
                             </div>
@@ -163,7 +171,7 @@
                 </div>
 
                 <!-- Right Column: Recent Activity -->
-                <div class="lg:col-span-1"
+                <div class="lg:col-span-1">
                     <div class="bg-white rounded-lg shadow-md border border-gray-200 p-6 sticky top-6">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-bold text-gray-900">Today's Activity</h3>
@@ -329,7 +337,7 @@
                 currentDate: '',
                 // cooldown to prevent accidental double scans
                 lastScanAt: 0,
-                scanCooldownMs: 1200, // milliseconds
+                scanCooldownMs: 400, // milliseconds
                 scanningLocked: false,
 
                 init() {

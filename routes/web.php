@@ -72,7 +72,7 @@ Route::middleware('auth:admin')->group(function () {
         Route::post('/settings/expiration/update', [SettingsController::class, 'updateExpirationDate'])->name('settings.expiration.update');
         Route::post('/settings/logout/update', [SettingsController::class, 'updateAutoLogout'])->name('settings.logout.update');
         Route::post('/settings/admin/update', [SettingsController::class, 'updateAdminAccount'])->name('settings.admin.update');
-        
+
         //room reservations routes (admin)
         Route::get('/reserved-rooms', ReservedRoomsPageController::class)->name('admin.reserved-rooms.index');
         Route::get('/reserved-rooms/calendar-data', [ReservationController::class, 'getCalendarData'])->name('admin.reserved-rooms.calendar-data');

@@ -164,6 +164,7 @@
                             class="text-red-500">*</span></label>
                     <select type="text" x-model="user.course" required
                         class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#009639] dark:focus:ring-[#00b347]">
+                        <option value="">Select Course</option>
                         <option value="BSAb">BSAb</option>
                         <option value="BSA">BSA</option>
                         <option value="BSFil">BAFil</option>

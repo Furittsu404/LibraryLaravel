@@ -10,13 +10,11 @@ class Room extends Model
     protected $fillable = [
         'name',
         'description',
-        'capacity',
         'is_available'
     ];
 
     protected $casts = [
-        'is_available' => 'boolean',
-        'capacity' => 'integer'
+        'is_available' => 'boolean'
     ];
 
     /**
@@ -51,13 +49,13 @@ class Room extends Model
             ->where(function ($query) use ($startTime, $endTime) {
                 $query->where(function ($q) use ($startTime, $endTime) {
                     $q->where('start_time', '<=', $startTime)
-                      ->where('end_time', '>', $startTime);
+                        ->where('end_time', '>', $startTime);
                 })->orWhere(function ($q) use ($startTime, $endTime) {
                     $q->where('start_time', '<', $endTime)
-                      ->where('end_time', '>=', $endTime);
+                        ->where('end_time', '>=', $endTime);
                 })->orWhere(function ($q) use ($startTime, $endTime) {
                     $q->where('start_time', '>=', $startTime)
-                      ->where('end_time', '<=', $endTime);
+                        ->where('end_time', '<=', $endTime);
                 });
             })
             ->exists();
@@ -73,13 +71,13 @@ class Room extends Model
             ->where(function ($query) use ($startTime, $endTime) {
                 $query->where(function ($q) use ($startTime, $endTime) {
                     $q->where('start_time', '<=', $startTime)
-                      ->where('end_time', '>', $startTime);
+                        ->where('end_time', '>', $startTime);
                 })->orWhere(function ($q) use ($startTime, $endTime) {
                     $q->where('start_time', '<', $endTime)
-                      ->where('end_time', '>=', $endTime);
+                        ->where('end_time', '>=', $endTime);
                 })->orWhere(function ($q) use ($startTime, $endTime) {
                     $q->where('start_time', '>=', $startTime)
-                      ->where('end_time', '<=', $endTime);
+                        ->where('end_time', '<=', $endTime);
                 });
             })
             ->exists();

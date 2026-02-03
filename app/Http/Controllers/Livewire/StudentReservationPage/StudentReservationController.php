@@ -58,10 +58,10 @@ class StudentReservationController extends Controller
                     ->where(function ($query) use ($startTime, $endTime) {
                         $query->where(function ($q) use ($startTime) {
                             $q->where('start_time', '<=', $startTime)
-                              ->where('end_time', '>', $startTime);
+                                ->where('end_time', '>', $startTime);
                         })->orWhere(function ($q) use ($startTime, $endTime) {
                             $q->where('start_time', '>=', $startTime)
-                              ->where('end_time', '<=', $endTime);
+                                ->where('end_time', '<=', $endTime);
                         });
                     })
                     ->exists();
@@ -75,10 +75,10 @@ class StudentReservationController extends Controller
                         ->where(function ($query) use ($startTime, $endTime) {
                             $query->where(function ($q) use ($startTime) {
                                 $q->where('start_time', '<=', $startTime)
-                                  ->where('end_time', '>', $startTime);
+                                    ->where('end_time', '>', $startTime);
                             })->orWhere(function ($q) use ($startTime, $endTime) {
                                 $q->where('start_time', '>=', $startTime)
-                                  ->where('end_time', '<=', $endTime);
+                                    ->where('end_time', '<=', $endTime);
                             });
                         })
                         ->first();
@@ -116,19 +116,19 @@ class StudentReservationController extends Controller
         try {
             $validated = $request->validate([
                 'room_id' => 'required|exists:rooms,id',
-                'user_id' => 'required|integer',
+                'barcode' => 'required|string',
                 'reservation_date' => 'required|date|after_or_equal:today',
                 'start_time' => 'required|date_format:H:i',
                 'end_time' => 'required|date_format:H:i|after:start_time',
                 'purpose' => 'required|string|max:500'
             ]);
 
-            // Check if user exists
-            $user = User::where('id', $validated['user_id'])->first();
+            // Check if user exists by barcode
+            $user = User::where('barcode', $validated['barcode'])->first();
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'User ID not found. Please check your student ID.'
+                    'message' => 'Student ID not found. Please check your student/school ID.'
                 ]);
             }
 
@@ -145,7 +145,7 @@ class StudentReservationController extends Controller
             // Create reservation
             $reservation = RoomReservation::create([
                 'room_id' => $validated['room_id'],
-                'user_id' => $validated['user_id'],
+                'user_id' => $user->id,
                 'reservation_date' => $validated['reservation_date'],
                 'start_time' => $validated['start_time'],
                 'end_time' => $validated['end_time'],

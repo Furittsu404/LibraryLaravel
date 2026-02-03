@@ -42,10 +42,42 @@ class ReservationController extends Controller
 
         $blocked = $blockedQuery->get();
 
+        // Transform to plain arrays with formatted dates to avoid timezone issues
+        $formattedReservations = $reservations->map(function ($reservation) {
+            return [
+                'id' => $reservation->id,
+                'room_id' => $reservation->room_id,
+                'user_id' => $reservation->user_id,
+                'reservation_date' => Carbon::parse($reservation->reservation_date)->format('Y-m-d'),
+                'start_time' => $reservation->start_time,
+                'end_time' => $reservation->end_time,
+                'purpose' => $reservation->purpose,
+                'status' => $reservation->status,
+                'created_at' => $reservation->created_at,
+                'updated_at' => $reservation->updated_at,
+                'room' => $reservation->room,
+                'user' => $reservation->user
+            ];
+        });
+
+        $formattedBlocked = $blocked->map(function ($slot) {
+            return [
+                'id' => $slot->id,
+                'room_id' => $slot->room_id,
+                'blocked_date' => Carbon::parse($slot->blocked_date)->format('Y-m-d'),
+                'start_time' => $slot->start_time,
+                'end_time' => $slot->end_time,
+                'reason' => $slot->reason,
+                'created_at' => $slot->created_at,
+                'updated_at' => $slot->updated_at,
+                'room' => $slot->room
+            ];
+        });
+
         return response()->json([
             'success' => true,
-            'reservations' => $reservations,
-            'blocked_slots' => $blocked
+            'reservations' => $formattedReservations,
+            'blocked_slots' => $formattedBlocked
         ]);
     }
 
