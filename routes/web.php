@@ -11,6 +11,7 @@ use App\Http\Controllers\Livewire\SettingsPage\SettingsPageController;
 use App\Http\Controllers\Livewire\SettingsPage\SettingsController;
 use App\Http\Controllers\Livewire\ReservedRoomsPage\ReservedRoomsPageController;
 use App\Http\Controllers\Livewire\StudentReservationPage\StudentReservationController;
+use App\Http\Controllers\Livewire\StudentRegistrationPage\StudentRegistrationController;
 use App\Http\Controllers\Livewire\ReservedRoomsPage\ReservationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReportExportController;
@@ -25,10 +26,17 @@ Route::post('/scanner/scan', [ScannerController::class, 'scan'])->name('scanner.
 Route::get('/scanner/today-logins', [ScannerController::class, 'getTodaysLoginsApi'])->name('scanner.today-logins');
 Route::post('/scanner/set-section', [ScannerController::class, 'setSection'])->name('scanner.set-section');
 
+// Admin password verification for scanner section switching (Public API)
+Route::post('/api/verify-admin-password', [ScannerController::class, 'verifyAdminPassword'])->name('api.verify-admin-password');
+
 // Student Room Reservation (Public)
 Route::get('/reservations', [StudentReservationController::class, 'index'])->name('student.reservations');
 Route::get('/reservations/available-slots', [StudentReservationController::class, 'getAvailableSlots'])->name('student.reservations.slots');
 Route::post('/reservations/create', [StudentReservationController::class, 'create'])->name('student.reservations.create');
+
+// Student Registration (Public)
+Route::get('/registration', [StudentRegistrationController::class, 'index'])->name('student.registration');
+Route::post('/registration', [StudentRegistrationController::class, 'register'])->name('student.registration.submit');
 
 // Admin Login
 Route::get('/login', [AuthController::class, 'render'])->name('login');
@@ -72,6 +80,7 @@ Route::middleware('auth:admin')->group(function () {
         Route::post('/settings/expiration/update', [SettingsController::class, 'updateExpirationDate'])->name('settings.expiration.update');
         Route::post('/settings/logout/update', [SettingsController::class, 'updateAutoLogout'])->name('settings.logout.update');
         Route::post('/settings/admin/update', [SettingsController::class, 'updateAdminAccount'])->name('settings.admin.update');
+        Route::post('/settings/scanner-password/update', [SettingsController::class, 'updateScannerPassword'])->name('settings.scanner-password.update');
 
         //room reservations routes (admin)
         Route::get('/reserved-rooms', ReservedRoomsPageController::class)->name('admin.reserved-rooms.index');

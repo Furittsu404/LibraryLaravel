@@ -86,4 +86,31 @@ class SettingsController extends Controller
             ]);
         }
     }
+
+    public function updateScannerPassword(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'scanner_password' => 'required|string|min:4'
+            ]);
+
+            // Hash and store the scanner password as a setting
+            Setting::set('scanner_password', Hash::make($validated['scanner_password']));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Scanner password updated successfully'
+            ]);
+        } catch (ValidationException $e) {
+            $errors = $e->errors();
+            $firstError = reset($errors);
+            $message = is_array($firstError) ? $firstError[0] : $firstError;
+
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+                'errors' => $errors
+            ]);
+        }
+    }
 }

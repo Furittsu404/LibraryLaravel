@@ -9,6 +9,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -46,7 +50,7 @@
 <body class="bg-gray-50 min-h-screen" x-data="scannerApp()">
 
     <!-- Settings Button (Minimal, Top Right Corner) -->
-    <button @click="sidebarOpen = true"
+    <button @click="showPasswordModal = true"
         class="fixed top-6 right-6 w-10 h-10 bg-white hover:bg-gray-50 rounded-lg shadow-md hover:shadow-lg opacity-40 hover:opacity-100 transition-all duration-200 z-40 border border-gray-200">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
             stroke="currentColor" class="w-5 h-5 mx-auto text-gray-600">
@@ -55,6 +59,78 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
     </button>
+
+    <!-- Password Verification Modal -->
+    <div x-show="showPasswordModal" x-cloak x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0" @click="closePasswordModal()"
+        class="fixed inset-0 backdrop-blur-lg bg-black/30 z-50 flex items-center justify-center p-4">
+
+        <div x-show="showPasswordModal" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95" @click.stop
+            class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full border-t-4 border-green-600">
+
+            <!-- Icon -->
+            <div class="flex justify-center mb-4">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor" class="w-8 h-8 text-green-600">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Title -->
+            <div class="text-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">Admin Verification</h3>
+                <p class="text-gray-600">Enter admin password to access section settings</p>
+            </div>
+
+            <!-- Error Message -->
+            <div x-show="passwordError" x-cloak class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p class="text-sm text-red-600 text-center" x-text="passwordError"></p>
+            </div>
+
+            <!-- Password Input -->
+            <form @submit.prevent="verifyPassword()">
+                <div class="mb-6">
+                    <label for="admin-password" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Admin Password
+                    </label>
+                    <input type="password" id="admin-password" x-ref="passwordInput" x-model="adminPassword" required
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                        placeholder="Enter password"
+                        :disabled="isVerifying">
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex gap-3">
+                    <button type="button" @click="closePasswordModal()"
+                        class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors duration-200"
+                        :disabled="isVerifying">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="flex-1 px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        :disabled="isVerifying">
+                        <svg x-show="isVerifying" class="animate-spin h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        <span x-text="isVerifying ? 'Verifying...' : 'Verify'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div class="min-h-screen flex flex-col">
         <!-- Header -->
@@ -139,6 +215,39 @@
                         </div>
                     </div>
 
+                    <!-- Registration Card (Entrance Section Only) -->
+                    @if ($currentSection === 'entrance')
+                        <div
+                            class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                            <div class="flex items-start gap-4">
+                                <div class="shrink-0">
+                                    <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                            stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-green-600">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-1">New User?</h3>
+                                    <p class="text-gray-600 text-sm mb-4">Register your account to access the library
+                                        and
+                                        all its services.</p>
+                                    <a href="{{ route('student.registration') }}"
+                                        class="inline-flex items-center gap-2 bg-green-600 text-white font-medium px-5 py-2.5 rounded-lg hover:bg-green-700 transition-colors">
+                                        <span>Register Now</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                            stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     <!-- Room Reservation Card -->
                     <div
                         class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
@@ -154,7 +263,8 @@
                             </div>
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Need to Reserve a Room?</h3>
-                                <p class="text-gray-600 text-sm mb-4">Book discussion rooms, study areas, and conference
+                                <p class="text-gray-600 text-sm mb-4">Book discussion rooms, study areas, and
+                                    conference
                                     spaces easily online.</p>
                                 <a href="{{ route('student.reservations') }}"
                                     class="inline-flex items-center gap-2 bg-green-600 text-white font-medium px-5 py-2.5 rounded-lg hover:bg-green-700 transition-colors">
@@ -260,14 +370,21 @@
                 <h3 class="text-2xl font-bold text-gray-900 mb-2" x-text="message"></h3>
                 <p class="text-gray-600 text-lg mb-6" x-text="description"></p>
 
-                <!-- Auto-close indicator -->
-                <div class="flex items-center justify-center gap-2 text-sm text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>This message will close automatically in 4 seconds</span>
+                <!-- Visual Countdown -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-center gap-2 text-sm text-gray-500 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Closing in <span class="font-bold text-lg" x-text="archiveCountdown"></span>
+                            seconds</span>
+                    </div>
+                    <div class="w-full bg-orange-200 rounded-full h-2">
+                        <div class="bg-orange-600 h-2 rounded-full transition-all duration-1000"
+                            :style="`width: ${(archiveCountdown / 4) * 100}%`"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -337,6 +454,12 @@
                 sectionName: '{{ $sectionName }}',
                 sidebarOpen: false,
                 currentDate: '',
+                archiveCountdown: 4,
+                archiveCountdownInterval: null,
+                showPasswordModal: false,
+                adminPassword: '',
+                passwordError: '',
+                isVerifying: false,
                 // cooldown to prevent accidental double scans
                 lastScanAt: 0,
                 scanCooldownMs: 400, // milliseconds
@@ -353,15 +476,50 @@
                             const isArchived = this.messageType === 'archived';
                             const timeout = isArchived ? 4000 : 3000;
 
+                            if (isArchived) {
+                                // Start countdown for archived modal
+                                this.startArchiveCountdown();
+                            } else {
+                                setTimeout(() => {
+                                    this.message = '';
+                                    this.description = '';
+                                    this.messageType = '';
+                                    this.currentUser = null;
+                                    this.$refs.barcodeInput.focus();
+                                }, timeout);
+                            }
+                        }
+                    });
+
+                    // Auto-focus password input when modal opens
+                    this.$watch('showPasswordModal', (value) => {
+                        if (value) {
+                            this.$nextTick(() => {
+                                this.$refs.passwordInput?.focus();
+                            });
+                        }
+                    });
+                },
+
+                startArchiveCountdown() {
+                    this.archiveCountdown = 4;
+                    if (this.archiveCountdownInterval) {
+                        clearInterval(this.archiveCountdownInterval);
+                    }
+                    this.archiveCountdownInterval = setInterval(() => {
+                        this.archiveCountdown--;
+                        if (this.archiveCountdown <= 0) {
+                            clearInterval(this.archiveCountdownInterval);
+                            // Add 2-second grace period before closing
                             setTimeout(() => {
                                 this.message = '';
                                 this.description = '';
                                 this.messageType = '';
                                 this.currentUser = null;
                                 this.$refs.barcodeInput.focus();
-                            }, timeout);
+                            }, 2000);
                         }
-                    });
+                    }, 1000);
                 },
 
                 playSound(type) {
@@ -512,6 +670,51 @@
                     } catch (error) {
                         console.error('Failed to refresh logins:', error);
                     }
+                },
+
+                async verifyPassword() {
+                    this.isVerifying = true;
+                    this.passwordError = '';
+
+                    try {
+                        const response = await fetch('/api/verify-admin-password', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                password: this.adminPassword
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            // Password correct, open sidebar
+                            this.showPasswordModal = false;
+                            this.adminPassword = '';
+                            this.passwordError = '';
+                            this.sidebarOpen = true;
+                        } else {
+                            // Password incorrect
+                            this.passwordError = data.message || 'Incorrect password. Please try again.';
+                            this.adminPassword = '';
+                            this.$refs.passwordInput.focus();
+                        }
+                    } catch (error) {
+                        console.error('Password verification error:', error);
+                        this.passwordError = 'An error occurred. Please try again.';
+                    } finally {
+                        this.isVerifying = false;
+                    }
+                },
+
+                closePasswordModal() {
+                    this.showPasswordModal = false;
+                    this.adminPassword = '';
+                    this.passwordError = '';
+                    this.isVerifying = false;
                 },
 
                 async changeSection(code, name) {

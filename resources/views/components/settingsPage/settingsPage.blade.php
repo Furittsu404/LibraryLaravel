@@ -162,6 +162,111 @@
                 </div>
             </div>
 
+            {{-- Scanner Password Settings Section --}}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6">
+                <div class="max-w-5xl">
+                    <div class="mb-6">
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Attendance Scanner Password</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Password required to access section settings in the scanner</p>
+                    </div>
+
+                    <div x-data="{
+                        scannerPassword: '',
+                        confirmPassword: '',
+                        saving: false,
+                        async saveScannerPassword() {
+                            if (this.saving) return;
+                            
+                            if (!this.scannerPassword) {
+                                window.dispatchEvent(new CustomEvent('show-toast', {
+                                    detail: { type: 'error', message: 'Please enter a password' }
+                                }));
+                                return;
+                            }
+                            
+                            if (this.scannerPassword !== this.confirmPassword) {
+                                window.dispatchEvent(new CustomEvent('show-toast', {
+                                    detail: { type: 'error', message: 'Passwords do not match' }
+                                }));
+                                return;
+                            }
+                            
+                            this.saving = true;
+                    
+                            try {
+                                const response = await fetch('{{ route('settings.scanner-password.update') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        scanner_password: this.scannerPassword
+                                    })
+                                });
+                    
+                                const data = await response.json();
+                    
+                                if (data.success) {
+                                    window.dispatchEvent(new CustomEvent('show-toast', {
+                                        detail: { type: 'success', message: data.message }
+                                    }));
+                                    this.scannerPassword = '';
+                                    this.confirmPassword = '';
+                                    Livewire.dispatch('settingsUpdated');
+                                } else {
+                                    window.dispatchEvent(new CustomEvent('show-toast', {
+                                        detail: { type: 'error', message: data.message || 'Error updating scanner password' }
+                                    }));
+                                }
+                            } catch (error) {
+                                window.dispatchEvent(new CustomEvent('show-toast', {
+                                    detail: { type: 'error', message: 'Error updating scanner password' }
+                                }));
+                                console.error(error);
+                            } finally {
+                                this.saving = false;
+                            }
+                        }
+                    }">
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    New Scanner Password
+                                </label>
+                                <input type="password" x-model="scannerPassword"
+                                    class="w-full max-w-xs px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
+                                    placeholder="Enter new password">
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Confirm Password
+                                </label>
+                                <input type="password" x-model="confirmPassword"
+                                    class="w-full max-w-xs px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
+                                    placeholder="Confirm password">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                    This password will be required to access section settings on the attendance scanner
+                                </p>
+                            </div>
+
+                            <div
+                                class="mb-4 text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 dark:border-blue-600 pl-4 py-2">
+                                <strong>Security Note:</strong> This password is separate from your admin account and is used to prevent unauthorized section changes on the public scanner interface.
+                            </div>
+
+                            <button @click="saveScannerPassword()" :disabled="saving"
+                                :class="saving ? 'opacity-50 cursor-not-allowed' : ''"
+                                class="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200">
+                                <span x-show="!saving">Update Scanner Password</span>
+                                <span x-show="saving">Updating...</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Admin Account Settings Section --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6">
                 <div class="max-w-5xl">

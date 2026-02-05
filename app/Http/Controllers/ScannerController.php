@@ -6,8 +6,11 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Archive;
 use App\Models\Attendance;
+use App\Models\Admin;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class ScannerController extends Controller
 {
@@ -260,5 +263,35 @@ class ScannerController extends Controller
         ];
 
         return $sections[$code] ?? 'Unknown Section';
+    }
+
+    public function verifyAdminPassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string'
+        ]);
+
+        // Get scanner password from settings
+        $scannerPasswordHash = Setting::get('scanner_password');
+
+        if (!$scannerPasswordHash) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Scanner password has not been set. Please contact an administrator.'
+            ]);
+        }
+
+        // Verify password
+        if (Hash::check($request->password, $scannerPasswordHash)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Password verified successfully.'
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Incorrect password. Please try again.'
+            ]);
+        }
     }
 }
