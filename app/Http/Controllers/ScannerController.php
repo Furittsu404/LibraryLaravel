@@ -232,7 +232,7 @@ class ScannerController extends Controller
             )
             ->where('attendance.library_section', $section)
             ->whereDate('attendance.login_time', $today)
-            ->orderBy('attendance.login_time', 'desc')
+            ->orderBy('attendance.updated_at', 'desc')
             ->limit(15)
             ->get()
             ->map(function ($login) {
