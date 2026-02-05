@@ -167,7 +167,8 @@
                 <div class="max-w-5xl">
                     <div class="mb-6">
                         <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Attendance Scanner Password</h2>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Password required to access section settings in the scanner</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Password required to access section
+                            settings in the scanner</p>
                     </div>
 
                     <div x-data="{
@@ -176,21 +177,21 @@
                         saving: false,
                         async saveScannerPassword() {
                             if (this.saving) return;
-                            
+                    
                             if (!this.scannerPassword) {
                                 window.dispatchEvent(new CustomEvent('show-toast', {
                                     detail: { type: 'error', message: 'Please enter a password' }
                                 }));
                                 return;
                             }
-                            
+                    
                             if (this.scannerPassword !== this.confirmPassword) {
                                 window.dispatchEvent(new CustomEvent('show-toast', {
                                     detail: { type: 'error', message: 'Passwords do not match' }
                                 }));
                                 return;
                             }
-                            
+                    
                             this.saving = true;
                     
                             try {
@@ -253,7 +254,8 @@
 
                             <div
                                 class="mb-4 text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 dark:border-blue-600 pl-4 py-2">
-                                <strong>Security Note:</strong> This password is separate from your admin account and is used to prevent unauthorized section changes on the public scanner interface.
+                                <strong>Security Note:</strong> This password is separate from your admin account and is
+                                used to prevent unauthorized section changes on the public scanner interface.
                             </div>
 
                             <button @click="saveScannerPassword()" :disabled="saving"

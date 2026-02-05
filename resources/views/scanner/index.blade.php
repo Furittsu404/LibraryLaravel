@@ -103,8 +103,7 @@
                     </label>
                     <input type="password" id="admin-password" x-ref="passwordInput" x-model="adminPassword" required
                         class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
-                        placeholder="Enter password"
-                        :disabled="isVerifying">
+                        placeholder="Enter password" :disabled="isVerifying">
                 </div>
 
                 <!-- Buttons -->
@@ -188,7 +187,8 @@
 
                         <form @submit.prevent="scanBarcode" class="max-w-md mx-auto">
                             <div class="relative">
-                                <input type="text" x-model="barcode" x-ref="barcodeInput" :disabled="scanningLocked"
+                                <input type="text" x-model="barcode" x-ref="barcodeInput"
+                                    :disabled="scanningLocked"
                                     class="w-full text-xl font-mono bg-gray-50 border-2 border-gray-300 focus:border-green-500 focus:bg-white rounded-lg px-6 py-4 focus:outline-none focus:ring-4 focus:ring-green-100 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                                     autocomplete="off" autofocus>
                                 <div class="absolute right-4 top-1/2 -translate-y-1/2 scan-pulse">
