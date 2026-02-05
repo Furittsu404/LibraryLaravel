@@ -145,6 +145,25 @@ class AttendanceMonthSheet implements FromArray, WithTitle, WithStyles, WithColu
             $totals['total_f'] ?: ''
         ];
 
+        // Empty row before grand total
+        $rows[] = [];
+
+        // Grand Total row (combining M and F)
+        $grandTotal = $totals['total_m'] + $totals['total_f'];
+        $rows[] = [
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            'Grand Total',
+            $grandTotal ?: ''
+        ];
+
         return $rows;
     }
 
@@ -241,10 +260,34 @@ class AttendanceMonthSheet implements FromArray, WithTitle, WithStyles, WithColu
             ],
         ]);
 
+        // Grand Total row styling (row 40: row 38 + 1 empty + 1 grand total)
+        $grandTotalRow = $lastRow + 2;
+        $sheet->getStyle("J{$grandTotalRow}:K{$grandTotalRow}")->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 12,
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_RIGHT,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'D0D0D0'],
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_MEDIUM,
+                    'color' => ['rgb' => '000000'],
+                ],
+            ],
+        ]);
+
         // Set row heights
         $sheet->getRowDimension(1)->setRowHeight(25);
         $sheet->getRowDimension(5)->setRowHeight(20);
         $sheet->getRowDimension(6)->setRowHeight(20);
+        $sheet->getRowDimension($grandTotalRow)->setRowHeight(25);
 
         return [];
     }
