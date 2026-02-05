@@ -45,6 +45,7 @@ class ArchiveController extends Controller
 
             // Create active user with updated data
             $user = new User([
+                'id' => $archivedUser->id,
                 'lname' => $validated['lname'],
                 'fname' => $validated['fname'],
                 'mname' => $validated['mname'],
