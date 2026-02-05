@@ -56,7 +56,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
                                 </svg>
-                                CLSU Library Information Services Office
+                                CLSU Library and Information Services Office
                             </p>
                         </div>
                     </div>
@@ -265,7 +265,7 @@
                                 <div class="grid grid-cols-7 bg-white dark:bg-gray-900">
                                     <template x-for="day in calendarDays" :key="day.date">
                                         <div class="border border-gray-200 dark:border-gray-700 min-h-32 p-2"
-                                            :class="!day.isCurrentMonth ? 'bg-gray-50 dark:bg-gray-800' : ''">
+                                            :class="!day.isCurrentMonth ? 'bg-gray-100 dark:bg-gray-900' : ''">
                                             <div class="text-sm font-semibold mb-2"
                                                 :class="day.isToday ? 'text-green-600 dark:text-green-400' : day
                                                     .isCurrentMonth ? 'text-gray-700 dark:text-gray-300' :

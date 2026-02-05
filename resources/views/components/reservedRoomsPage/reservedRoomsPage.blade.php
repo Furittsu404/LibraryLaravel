@@ -1,4 +1,4 @@
-<div class="px-6 py-6" x-data="reservedRoomsData('{{ csrf_token() }}')" x-init="init()">
+<div class="px-6 py-6" x-data="reservedRoomsData('{{ csrf_token() }}', @js($rooms))" x-init="init()">
     {{-- Page Header --}}
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Reserved Rooms</h1>
@@ -112,8 +112,9 @@
                                 }"
                                 class="w-full text-left p-1.5 rounded border-l-4 hover:shadow-md transition-all text-xs">
                                 <div class="font-semibold truncate" x-text="reservation.time_display"></div>
-                                <div class="truncate text-xs"
-                                    x-text="reservation.type === 'blocked' ? 'BLOCKED' : reservation.room_name"></div>
+                                <div class="truncate text-xs" x-text="reservation.room_name"></div>
+                                <div class="truncate text-xs font-medium" x-show="reservation.type === 'blocked'"
+                                    x-text="'BLOCKED'"></div>
                             </button>
                         </template>
                     </div>
@@ -183,7 +184,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-4">
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
                             <input type="date" x-model="editData.reservation_date" :disabled="!editMode"
@@ -192,29 +193,16 @@
                                     'bg-white dark:bg-gray-800'">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start
-                                Time</label>
-                            <select x-model="editData.start_time" :disabled="!editMode"
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time
+                                Slot</label>
+                            <select x-model="editData.time_slot" :disabled="!editMode"
                                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
                                 :class="!editMode ? 'bg-gray-50 dark:bg-gray-700 cursor-not-allowed' :
                                     'bg-white dark:bg-gray-800'">
-                                <option value="08:00">8:00 AM</option>
-                                <option value="10:00">10:00 AM</option>
-                                <option value="12:00">12:00 PM</option>
-                                <option value="14:00">2:00 PM</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End
-                                Time</label>
-                            <select x-model="editData.end_time" :disabled="!editMode"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
-                                :class="!editMode ? 'bg-gray-50 dark:bg-gray-700 cursor-not-allowed' :
-                                    'bg-white dark:bg-gray-800'">
-                                <option value="10:00">10:00 AM</option>
-                                <option value="12:00">12:00 PM</option>
-                                <option value="14:00">2:00 PM</option>
-                                <option value="16:00">4:00 PM</option>
+                                <option value="08:00-10:00">8:00 AM - 10:00 AM</option>
+                                <option value="10:00-12:00">10:00 AM - 12:00 PM</option>
+                                <option value="12:00-14:00">12:00 PM - 2:00 PM</option>
+                                <option value="14:00-16:00">2:00 PM - 4:00 PM</option>
                             </select>
                         </div>
                     </div>
@@ -335,10 +323,11 @@
                 <div class="space-y-4">
                     {{-- Room --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Room</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Room(s)
+                            Blocked</label>
                         <div
                             class="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white">
-                            <span x-text="currentBlockedSlot?.room?.name"></span>
+                            <span x-text="currentBlockedSlotInfo?.room_name || currentBlockedSlot?.room?.name"></span>
                         </div>
                     </div>
 
@@ -353,23 +342,14 @@
                         </div>
                     </div>
 
-                    {{-- Time Range --}}
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start
-                                Time</label>
-                            <div
-                                class="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white">
-                                <span x-text="currentBlockedSlot?.start_time"></span>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End
-                                Time</label>
-                            <div
-                                class="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white">
-                                <span x-text="currentBlockedSlot?.end_time"></span>
-                            </div>
+                    {{-- Time Slot --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time
+                            Slot</label>
+                        <div
+                            class="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white">
+                            <span
+                                x-text="formatTimeSlot(currentBlockedSlot?.start_time, currentBlockedSlot?.end_time)"></span>
                         </div>
                     </div>
 
@@ -429,6 +409,7 @@
                         <select x-model="blockData.room_id" required
                             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500">
                             <option value="">Select a room</option>
+                            <option value="all" class="font-semibold">🚫 All Rooms</option>
                             @foreach ($rooms as $room)
                                 <option value="{{ $room->id }}">{{ $room->name }}</option>
                             @endforeach
@@ -441,31 +422,18 @@
                             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500">
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start
-                                Time</label>
-                            <select x-model="blockData.start_time" required
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500">
-                                <option value="">Select start time</option>
-                                <option value="08:00">8:00 AM</option>
-                                <option value="10:00">10:00 AM</option>
-                                <option value="12:00">12:00 PM</option>
-                                <option value="14:00">2:00 PM</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End
-                                Time</label>
-                            <select x-model="blockData.end_time" required
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500">
-                                <option value="">Select end time</option>
-                                <option value="10:00">10:00 AM</option>
-                                <option value="12:00">12:00 PM</option>
-                                <option value="14:00">2:00 PM</option>
-                                <option value="16:00">4:00 PM</option>
-                            </select>
-                        </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time
+                            Slot</label>
+                        <select x-model="blockData.time_slot" required
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500">
+                            <option value="">Select time slot</option>
+                            <option value="all-day" class="font-semibold">🌅 All Day (8:00 AM - 4:00 PM)</option>
+                            <option value="08:00-10:00">8:00 AM - 10:00 AM</option>
+                            <option value="10:00-12:00">10:00 AM - 12:00 PM</option>
+                            <option value="12:00-14:00">12:00 PM - 2:00 PM</option>
+                            <option value="14:00-16:00">2:00 PM - 4:00 PM</option>
+                        </select>
                     </div>
 
                     <div>
@@ -497,7 +465,7 @@
 </div>
 
 <script>
-    function reservedRoomsData(csrfToken) {
+    function reservedRoomsData(csrfToken, rooms) {
         return {
             // State
             selectedRoom: '',
@@ -506,6 +474,7 @@
             calendarDays: [],
             reservations: [],
             csrfToken: csrfToken,
+            rooms: rooms,
 
             // Modals
             showReservationModal: false,
@@ -514,6 +483,7 @@
             showBlockedSlotModal: false,
             currentReservation: null,
             currentBlockedSlot: null,
+            currentBlockedSlotInfo: null,
             editMode: false,
             saving: false,
             blocking: false,
@@ -525,8 +495,7 @@
                 room_name: '',
                 status: '',
                 reservation_date: '',
-                start_time: '',
-                end_time: '',
+                time_slot: '',
                 purpose: ''
             },
 
@@ -534,8 +503,7 @@
             blockData: {
                 room_id: '',
                 blocked_date: '',
-                start_time: '',
-                end_time: '',
+                time_slot: '',
                 reason: ''
             },
 
@@ -553,11 +521,27 @@
                 });
             },
 
+            formatTimeSlot(startTime, endTime) {
+                if (!startTime || !endTime) return 'N/A';
+
+                // Convert 24-hour format to 12-hour format with AM/PM
+                const formatTime = (time) => {
+                    const [hours, minutes] = time.split(':');
+                    const hour = parseInt(hours);
+                    const ampm = hour >= 12 ? 'PM' : 'AM';
+                    const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+                    return `${displayHour}:${minutes} ${ampm}`;
+                };
+
+                return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+            },
+
             goToToday() {
                 const today = new Date();
                 this.currentMonth = today.getMonth();
                 this.currentYear = today.getFullYear();
                 this.generateCalendarDays();
+                this.loadReservations();
             },
 
             previousMonth() {
@@ -673,27 +657,68 @@
                     });
                 });
 
-                // Add blocked slots
+                // Group blocked slots by date and time to detect if all rooms are blocked
+                const blockedByDateTime = {};
                 data.blocked_slots.forEach(blocked => {
                     const startKey = blocked.start_time.substring(0, 5);
-                    // Handle date - it might be a plain YYYY-MM-DD string or a timestamp
                     const dateOnly = blocked.blocked_date.includes('T') ?
                         blocked.blocked_date.split('T')[0] :
                         blocked.blocked_date;
 
-                    all.push({
-                        id: `blocked-${blocked.id}`,
-                        type: 'blocked',
-                        status: 'blocked',
-                        room_name: blocked.room.name,
-                        user_name: 'BLOCKED',
-                        date: dateOnly,
-                        start_time: blocked.start_time,
-                        end_time: blocked.end_time,
-                        time_display: timeLabels[startKey] ||
-                            `${startKey}-${blocked.end_time.substring(0, 5)}`,
-                        raw: blocked
-                    });
+                    const key = `${dateOnly}_${startKey}_${blocked.end_time.substring(0, 5)}`;
+
+                    if (!blockedByDateTime[key]) {
+                        blockedByDateTime[key] = {
+                            date: dateOnly,
+                            start_time: blocked.start_time,
+                            end_time: blocked.end_time,
+                            time_display: timeLabels[startKey] ||
+                                `${startKey}-${blocked.end_time.substring(0, 5)}`,
+                            rooms: [],
+                            blocked_slots: []
+                        };
+                    }
+
+                    blockedByDateTime[key].rooms.push(blocked.room.name);
+                    blockedByDateTime[key].blocked_slots.push(blocked);
+                });
+
+                // Check if all rooms are blocked for each time slot
+                const totalRooms = this.rooms.length;
+                Object.values(blockedByDateTime).forEach(group => {
+                    if (group.rooms.length === totalRooms) {
+                        // All rooms are blocked - create single entry
+                        all.push({
+                            id: `blocked-all-${group.date}-${group.start_time}`,
+                            type: 'blocked',
+                            status: 'blocked',
+                            room_name: '🚫 All Rooms',
+                            user_name: 'BLOCKED',
+                            date: group.date,
+                            start_time: group.start_time,
+                            end_time: group.end_time,
+                            time_display: group.time_display,
+                            raw: group.blocked_slots[0], // Use first one for modal
+                            isAllRooms: true,
+                            allBlockedSlots: group.blocked_slots
+                        });
+                    } else {
+                        // Not all rooms blocked - add individual entries
+                        group.blocked_slots.forEach(blocked => {
+                            all.push({
+                                id: `blocked-${blocked.id}`,
+                                type: 'blocked',
+                                status: 'blocked',
+                                room_name: blocked.room.name,
+                                user_name: 'BLOCKED',
+                                date: group.date,
+                                start_time: blocked.start_time,
+                                end_time: blocked.end_time,
+                                time_display: group.time_display,
+                                raw: blocked
+                            });
+                        });
+                    }
                 });
 
                 return all;
@@ -711,14 +736,18 @@
 
                 this.currentReservation = reservation.raw;
 
+                // Combine start_time and end_time into time_slot format
+                const startTime = reservation.start_time.substring(0, 5);
+                const endTime = reservation.end_time.substring(0, 5);
+                const timeSlot = `${startTime}-${endTime}`;
+
                 // Use the already-transformed date from reservation.date instead of raw
                 // This ensures we get the correct date without timezone issues
                 this.editData = {
                     room_name: reservation.room_name,
                     status: reservation.raw.status,
                     reservation_date: reservation.date, // Use the transformed date
-                    start_time: reservation.start_time.substring(0, 5),
-                    end_time: reservation.end_time.substring(0, 5),
+                    time_slot: timeSlot,
                     purpose: reservation.raw.purpose
                 };
                 this.showReservationModal = true;
@@ -856,6 +885,9 @@
                 this.saving = true;
 
                 try {
+                    // Split time_slot into start_time and end_time
+                    const [start_time, end_time] = this.editData.time_slot.split('-');
+
                     const response = await fetch(
                         `/reserved-rooms/reservation/${this.currentReservation.id}/update`, {
                             method: 'POST',
@@ -866,8 +898,8 @@
                             body: JSON.stringify({
                                 status: this.editData.status,
                                 reservation_date: this.editData.reservation_date,
-                                start_time: this.editData.start_time,
-                                end_time: this.editData.end_time,
+                                start_time: start_time,
+                                end_time: end_time,
                                 purpose: this.editData.purpose
                             })
                         });
@@ -908,8 +940,7 @@
                 this.blockData = {
                     room_id: '',
                     blocked_date: '',
-                    start_time: '',
-                    end_time: '',
+                    time_slot: '',
                     reason: ''
                 };
                 this.showBlockModal = true;
@@ -917,6 +948,13 @@
 
             closeBlockModal() {
                 this.showBlockModal = false;
+                // Reset form
+                this.blockData = {
+                    room_id: '',
+                    blocked_date: '',
+                    time_slot: '',
+                    reason: ''
+                };
             },
 
             async blockTimeSlot() {
@@ -924,34 +962,97 @@
                 this.blocking = true;
 
                 try {
-                    const response = await fetch('/reserved-rooms/block-time', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': this.csrfToken
+                    // Define all time slots for "all-day" option
+                    const allDaySlots = [{
+                            start: '08:00',
+                            end: '10:00'
                         },
-                        body: JSON.stringify(this.blockData)
-                    });
+                        {
+                            start: '10:00',
+                            end: '12:00'
+                        },
+                        {
+                            start: '12:00',
+                            end: '14:00'
+                        },
+                        {
+                            start: '14:00',
+                            end: '16:00'
+                        }
+                    ];
 
-                    const data = await response.json();
+                    // Determine which time slots to block
+                    let timeSlotsToBlock = [];
+                    if (this.blockData.time_slot === 'all-day') {
+                        timeSlotsToBlock = allDaySlots;
+                    } else {
+                        const [start_time, end_time] = this.blockData.time_slot.split('-');
+                        timeSlotsToBlock = [{
+                            start: start_time,
+                            end: end_time
+                        }];
+                    }
 
-                    if (data.success) {
+                    // Determine which rooms to block
+                    const roomsToBlock = this.blockData.room_id === 'all' ? this.rooms : [{
+                        id: this.blockData.room_id
+                    }];
+
+                    let successCount = 0;
+                    let errorCount = 0;
+
+                    // Block each combination of room and time slot
+                    for (const room of roomsToBlock) {
+                        for (const timeSlot of timeSlotsToBlock) {
+                            try {
+                                const response = await fetch('/reserved-rooms/block-time', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': this.csrfToken
+                                    },
+                                    body: JSON.stringify({
+                                        room_id: room.id,
+                                        blocked_date: this.blockData.blocked_date,
+                                        start_time: timeSlot.start,
+                                        end_time: timeSlot.end,
+                                        reason: this.blockData.reason
+                                    })
+                                });
+
+                                const data = await response.json();
+                                if (data.success) {
+                                    successCount++;
+                                } else {
+                                    errorCount++;
+                                }
+                            } catch (error) {
+                                errorCount++;
+                                console.error(`Error blocking time slot:`, error);
+                            }
+                        }
+                    }
+
+                    if (successCount > 0) {
+                        const totalBlocks = roomsToBlock.length * timeSlotsToBlock.length;
                         window.dispatchEvent(new CustomEvent('show-toast', {
                             detail: {
                                 type: 'success',
-                                message: data.message
+                                message: `Successfully blocked ${successCount} time slot${successCount > 1 ? 's' : ''}` +
+                                    (errorCount > 0 ? ` (${errorCount} failed)` : '')
                             }
                         }));
-                        this.closeBlockModal();
-                        this.loadReservations();
                     } else {
                         window.dispatchEvent(new CustomEvent('show-toast', {
                             detail: {
                                 type: 'error',
-                                message: data.message
+                                message: 'Failed to block time slots'
                             }
                         }));
                     }
+
+                    this.closeBlockModal();
+                    this.loadReservations();
                 } catch (error) {
                     console.error('Error blocking time slot:', error);
                     window.dispatchEvent(new CustomEvent('show-toast', {
@@ -967,12 +1068,14 @@
 
             openBlockedSlotModal(blockedSlot) {
                 this.currentBlockedSlot = blockedSlot.raw;
+                this.currentBlockedSlotInfo = blockedSlot; // Store the full info including room_name
                 this.showBlockedSlotModal = true;
             },
 
             closeBlockedSlotModal() {
                 this.showBlockedSlotModal = false;
                 this.currentBlockedSlot = null;
+                this.currentBlockedSlotInfo = null;
             },
 
             async unblockTimeSlot() {

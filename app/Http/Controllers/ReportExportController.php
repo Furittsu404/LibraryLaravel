@@ -61,24 +61,25 @@ class ReportExportController extends Controller
 
             \Log::info('Creating ZIP', ['tempDir' => $tempDir]);
 
-            // Change to temp directory and use system zip command
-            $oldCwd = getcwd();
-            chdir($tempDir);
+            // Use PHP's ZipArchive (cross-platform, works on Windows and Linux)
+            $zip = new ZipArchive();
 
-            // Create array of files to zip
-            $filesToZip = ['Library_Statistics_Report.pdf'];
-            foreach ($excelFiles as $file) {
-                $filesToZip[] = basename($file['path']);
+            if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+                throw new \Exception('Could not create ZIP file');
             }
 
-            // Use system zip command
-            $zipCommand = 'zip -j ' . escapeshellarg($zipFileName) . ' ' . implode(' ', array_map('escapeshellarg', $filesToZip));
-            \Log::info('ZIP command', ['command' => $zipCommand]);
+            // Add PDF to ZIP
+            $zip->addFile($pdfPath, 'Library_Statistics_Report.pdf');
+            \Log::info('Added PDF to ZIP');
 
-            exec($zipCommand . ' 2>&1', $output, $returnCode);
-            \Log::info('ZIP command result', ['output' => $output, 'returnCode' => $returnCode]);
+            // Add Excel files to ZIP
+            foreach ($excelFiles as $file) {
+                $zip->addFile($file['path'], basename($file['path']));
+            }
+            \Log::info('Added Excel files to ZIP', ['count' => count($excelFiles)]);
 
-            chdir($oldCwd);
+            $zip->close();
+            \Log::info('ZIP closed');
 
             if (file_exists($zipPath) && filesize($zipPath) > 0) {
                 $fileSize = filesize($zipPath);
@@ -94,7 +95,7 @@ class ReportExportController extends Controller
                     'Content-Disposition' => 'attachment; filename="' . $zipFileName . '"'
                 ])->deleteFileAfterSend(true);
             } else {
-                throw new \Exception('ZIP file was not created successfully. Return code: ' . $returnCode);
+                throw new \Exception('ZIP file was not created successfully or is empty');
             }
         } catch (\Exception $e) {
             // Clean up temp directory if it exists

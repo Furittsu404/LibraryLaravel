@@ -190,7 +190,7 @@ export function initializeDashboard(
                     datasets: [
                         {
                             label: "Users",
-                            data: currentCourseData.map((c) => c.user_count),
+                            data: currentCourseData.map((c) => c.login_count),
                             backgroundColor: colors,
                             borderColor: isDarkMode ? "#1f2937" : "#ffffff",
                             borderWidth: 2,
@@ -285,7 +285,7 @@ export function initializeDashboard(
                     datasets: [
                         {
                             label: "Users",
-                            data: currentSexData.map((g) => g.user_count),
+                            data: currentSexData.map((g) => g.login_count),
                             backgroundColor: colors,
                             borderColor: isDarkMode ? "#1f2937" : "#ffffff",
                             borderWidth: 2,

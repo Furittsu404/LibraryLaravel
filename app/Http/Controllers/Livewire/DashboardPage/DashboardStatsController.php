@@ -16,7 +16,7 @@ class DashboardStatsController
 
         $totalUsers = DB::table('users')->where('created_at', '>=', $since)->count();
         $archivedUsers = DB::table('users_archive')->count();
-        $totalLogins = DB::table('attendance')->where('login_time', '>=', $since)->count();
+        $totalLogins = DB::table('attendance')->where('login_time', '>=', $since)->where('library_section', session('current_section', 'entrance'))->count();
         $activeUsers = DB::table('attendance')->whereNull('logout_time')->where('library_section', session('current_section', 'entrance'))->count();
 
         // Top students by login count in timeframe
@@ -24,6 +24,7 @@ class DashboardStatsController
             ->select('users.id', 'users.fname', 'users.lname', 'users.course', DB::raw('COUNT(attendance.id) as login_count'))
             ->join('users', 'attendance.user_id', '=', 'users.id')
             ->where('attendance.login_time', '>=', $since)
+            ->where('attendance.library_section', session('current_section', 'entrance'))
             ->groupBy('users.id', 'users.fname', 'users.lname', 'users.course')
             ->orderByDesc('login_count')
             ->limit(10)
@@ -34,6 +35,7 @@ class DashboardStatsController
             ->select('users.course', DB::raw('COUNT(attendance.id) as login_count'))
             ->join('users', 'attendance.user_id', '=', 'users.id')
             ->where('attendance.login_time', '>=', $since)
+            ->where('attendance.library_section', session('current_section', 'entrance'))
             ->groupBy('users.course')
             ->orderByDesc('login_count')
             ->limit(10)
@@ -53,6 +55,25 @@ class DashboardStatsController
                 return $r;
             });
 
+        // Reserved rooms (upcoming reservations)
+        $reservedRooms = DB::table('room_reservations')
+            ->select('room_reservations.*', 'rooms.name as room_name', 'users.fname', 'users.lname')
+            ->join('rooms', 'room_reservations.room_id', '=', 'rooms.id')
+            ->join('users', 'room_reservations.user_id', '=', 'users.id')
+            ->whereIn('room_reservations.status', ['pending', 'approved'])
+            ->where('room_reservations.reservation_date', '>=', Carbon::today())
+            ->orderBy('room_reservations.reservation_date', 'asc')
+            ->orderBy('room_reservations.start_time', 'asc')
+            ->limit(10)
+            ->get()
+            ->map(function ($r) {
+                $r->reservation_date_formatted = Carbon::parse($r->reservation_date)->format('M d, Y');
+                $r->start_time_formatted = Carbon::parse($r->start_time)->format('g:i A');
+                $r->end_time_formatted = Carbon::parse($r->end_time)->format('g:i A');
+                $r->purpose_short = $r->purpose ? \Illuminate\Support\Str::limit($r->purpose, 50) : null;
+                return $r;
+            });
+
         return response()->json([
             'success' => true,
             'totalUsers' => $totalUsers,
@@ -62,6 +83,7 @@ class DashboardStatsController
             'topStudents' => $topStudents,
             'topCourses' => $topCourses,
             'recentLogins' => $recentLogins,
+            'reservedRooms' => $reservedRooms,
         ]);
     }
 }

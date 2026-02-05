@@ -7,7 +7,12 @@ use App\Models\Room;
 
 class ReservedRoomsPageController extends Component
 {
-    public $title = 'Reserved Rooms';
+    public $title = 'LISO - Reserved Rooms';
+
+    public function mount()
+    {
+        session(['title' => $this->title]);
+    }
 
     public function render()
     {

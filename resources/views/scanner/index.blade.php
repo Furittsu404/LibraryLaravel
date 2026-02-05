@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>CLSU Library Information Services Office - Attendance System</title>
+    <title>CLSU Library and Information Services Office - Attendance System</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
@@ -64,7 +64,7 @@
                     <div class="flex items-center gap-6">
                         <img src="{{ asset('storage/images/CLSU-logo.png') }}" alt="CLSU Logo" class="h-16 w-16">
                         <div class="border-l border-gray-300 pl-6">
-                            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">CLSU - Library Information
+                            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">CLSU - Library and Information
                                 Services Office
                             </h1>
                         </div>
@@ -181,7 +181,8 @@
                                         class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                     <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                                 </span>
-                                <span class="text-xs text-gray-500">Live</span>
+                                <span class="text-sm font-semibold text-green-600"
+                                    x-text="activeUsers + ' Inside'"></span>
                             </div>
                         </div>
 
@@ -300,7 +301,7 @@
             </div>
 
             <div class="space-y-2">
-                @foreach ([['code' => 'entrance', 'name' => 'Entrance'], ['code' => 'exit', 'name' => 'Exit'], ['code' => 'serials', 'name' => 'Serials & Reference'], ['code' => 'humanities', 'name' => 'Humanities'], ['code' => 'multimedia', 'name' => 'Multimedia'], ['code' => 'filipiniana', 'name' => 'Filipiniana & Theses'], ['code' => 'relegation', 'name' => 'Relegation'], ['code' => 'science', 'name' => 'Science & Technology']] as $section)
+                @foreach ([['code' => 'entrance', 'name' => 'Entrance'], ['code' => 'exit', 'name' => 'Exit'], ['code' => 'periodicals', 'name' => 'Periodicals'], ['code' => 'humanities', 'name' => 'Humanities'], ['code' => 'multimedia', 'name' => 'Multimedia'], ['code' => 'filipiniana', 'name' => 'Filipiniana'], ['code' => 'makers', 'name' => 'Maker Space'], ['code' => 'science', 'name' => 'Science & Technology']] as $section)
                     <button @click="changeSection('{{ $section['code'] }}', '{{ $section['name'] }}')"
                         class="w-full text-left p-4 rounded-lg border transition-all group"
                         :class="currentSection === '{{ $section['code'] }}' ?
@@ -331,6 +332,7 @@
                 description: '',
                 currentUser: null,
                 recentLogins: @json($recentLogins),
+                activeUsers: {{ $activeUsers }},
                 currentSection: '{{ $currentSection }}',
                 sectionName: '{{ $sectionName }}',
                 sidebarOpen: false,
@@ -505,6 +507,7 @@
                         const data = await response.json();
                         if (data.success) {
                             this.recentLogins = data.logins;
+                            this.activeUsers = data.activeUsers || 0;
                         }
                     } catch (error) {
                         console.error('Failed to refresh logins:', error);

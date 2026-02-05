@@ -197,6 +197,16 @@ BEGIN
         SET logout_time = logout_datetime
         WHERE logout_time IS NULL
         AND DATE(login_time) = CURDATE();
+
+        -- Update user_status to 'outside' for all users who were automatically logged out
+        UPDATE users
+        SET user_status = 'outside'
+        WHERE user_status = 'inside'
+        AND id IN (
+            SELECT user_id FROM attendance
+            WHERE logout_time = logout_datetime
+            AND DATE(login_time) = CURDATE()
+        );
     END IF;
 END$$
 

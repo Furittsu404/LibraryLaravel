@@ -24,11 +24,11 @@ return new class extends Migration {
         // Insert default sections
         DB::table('sections')->insert([
             ['code' => 'entrance', 'name' => 'Library Entrance', 'icon' => '🚪', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['code' => 'serials', 'name' => 'Serials & Reference', 'icon' => '📰', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['code' => 'periodicals', 'name' => 'Periodicals', 'icon' => '📰', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['code' => 'humanities', 'name' => 'Humanities', 'icon' => '📚', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['code' => 'multimedia', 'name' => 'Multimedia', 'icon' => '🎬', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['code' => 'filipiniana', 'name' => 'Filipiniana & Theses', 'icon' => '🇵🇭', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['code' => 'relegation', 'name' => 'Relegation', 'icon' => '📦', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['code' => 'filipiniana', 'name' => 'Filipiniana', 'icon' => '🇵🇭', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['code' => 'makers', 'name' => 'Maker Space', 'icon' => '📦', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['code' => 'science', 'name' => 'Science & Technology', 'icon' => '🔬', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
         ]);
 

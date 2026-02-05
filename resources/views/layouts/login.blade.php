@@ -8,7 +8,7 @@
             @csrf
             <img src="{{ asset('storage/images/LISO_LogoColored.png') }}" alt="Library Logo"
                 class="h-40 w-40 mx-auto mb-4">
-            <h1 class="text-2xl font-bold mb-6 text-center">Library Entrance</h1>
+            <h1 class="text-2xl font-bold mb-6 text-center">Library and Information Services Office (LISO)</h1>
             <div class="mb-4">
                 <label for="email" class="block text-sm font-medium text-gray-700">Username</label>
                 <input type="text" id="email" name="email" required

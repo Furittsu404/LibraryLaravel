@@ -14,7 +14,7 @@ use App\Models\Archive;
 class AccountsPageController extends Component
 {
     use WithPagination;
-    public $title = 'Accounts Management';
+    public $title = 'LISO - Accounts';
     protected $users = [];
     protected $courses = [];
     public $sex;
@@ -24,6 +24,11 @@ class AccountsPageController extends Component
     public $search;
 
     protected $listeners = ['userUpdated' => '$refresh', 'userCreated' => '$refresh', 'userDeleted' => '$refresh'];
+
+    public function mount()
+    {
+        session(['title' => $this->title]);
+    }
 
     public function render()
     {

@@ -20,10 +20,17 @@ class ScannerController extends Controller
         // Get today's logins for current section
         $recentLogins = $this->getTodaysLogins($currentSection);
 
+        // Get count of users currently inside
+        $activeUsers = Attendance::whereNotNull('login_time')
+            ->whereNull('logout_time')
+            ->where('library_section', $currentSection)
+            ->count();
+
         return view('scanner.index', [
             'currentSection' => $currentSection,
             'sectionName' => $sectionName,
-            'recentLogins' => $recentLogins
+            'recentLogins' => $recentLogins,
+            'activeUsers' => $activeUsers
         ]);
     }
 
@@ -181,9 +188,16 @@ class ScannerController extends Controller
         $currentSection = $request->query('section') ?? (session('scanner_section') === 'exit' ? 'entrance' : session('scanner_section', 'entrance'));
         $recentLogins = $this->getTodaysLogins($currentSection);
 
+        // Get count of users currently inside
+        $activeUsers = Attendance::whereNotNull('login_time')
+            ->whereNull('logout_time')
+            ->where('library_section', $currentSection)
+            ->count();
+
         return response()->json([
             'success' => true,
-            'logins' => $recentLogins
+            'logins' => $recentLogins,
+            'activeUsers' => $activeUsers
         ]);
     }
 
@@ -237,11 +251,11 @@ class ScannerController extends Controller
         $sections = [
             'entrance' => 'Entrance',
             'exit' => 'Exit',
-            'serials' => 'Serials & Reference',
+            'periodicals' => 'Periodicals',
             'humanities' => 'Humanities',
             'multimedia' => 'Multimedia',
-            'filipiniana' => 'Filipiniana & Theses',
-            'relegation' => 'Relegation',
+            'filipiniana' => 'Filipiniana',
+            'makers' => 'Maker Space',
             'science' => 'Science & Technology'
         ];
 

@@ -7,14 +7,20 @@ use App\Models\User;
 use App\Models\Archive;
 use App\Models\Attendance;
 use App\Models\AdminHistory;
+use App\Models\RoomReservation;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class DashboardController extends Component
 {
-    public $title = 'Dashboard';
+    public $title = 'LISO - Dashboard';
     public $filterDays = 30; // Unified filter for all dashboard data
     public $customDays = ''; // Custom days input for filter
+
+    public function mount()
+    {
+        session(['title' => $this->title]);
+    }
 
     public function setFilterDays($days)
     {
@@ -72,7 +78,7 @@ class DashboardController extends Component
         $coursesByUsers = $this->getCoursesByUsers();
         $sexDistribution = $this->getsexDistribution();
 
-        $reservedRooms = collect([]);
+        $reservedRooms = $this->getReservedRooms();
         return view('components.dashboardPage.dashboard', [
             'totalUsers' => $totalUsers,
             'totalLogins' => $totalLogins,
@@ -188,26 +194,49 @@ class DashboardController extends Component
 
         return $timelineData;
     }
+
     public function getCoursesByUsers()
     {
-        // No time filter - show all registered users distribution
-        $coursesByUsers = User::select(['course', DB::raw('COUNT(*) as user_count')])
-            ->whereNotNull('course')
-            ->groupBy('course')
-            ->orderByDesc('user_count')
+        $startDate = Carbon::now()->subDays($this->filterDays);
+
+        $coursesByLogins = Attendance::join('users', 'attendance.user_id', '=', 'users.id')
+            ->select('users.course', DB::raw('COUNT(*) as login_count'))
+            ->whereNotNull('users.course')
+            ->where('attendance.login_time', '>=', $startDate)
+            ->where('attendance.library_section', session('current_section', 'entrance'))
+            ->groupBy('users.course')
+            ->orderByDesc('login_count')
             ->get();
 
-        return $coursesByUsers;
+        return $coursesByLogins;
     }
 
     public function getsexDistribution()
     {
-        // No time filter - show all registered users distribution
-        $sexDistribution = User::select(['sex', DB::raw('COUNT(*) as user_count')])
-            ->whereNotNull('sex')
-            ->groupBy('sex')
+        $startDate = Carbon::now()->subDays($this->filterDays);
+
+        $sexDistribution = Attendance::join('users', 'attendance.user_id', '=', 'users.id')
+            ->select('users.sex', DB::raw('COUNT(*) as login_count'))
+            ->whereNotNull('users.sex')
+            ->where('attendance.login_time', '>=', $startDate)
+            ->where('attendance.library_section', session('current_section', 'entrance'))
+            ->groupBy('users.sex')
             ->get();
 
         return $sexDistribution;
+    }
+
+    public function getReservedRooms()
+    {
+        // Get upcoming reservations (today and future) with pending or approved status
+        $reservedRooms = RoomReservation::with(['room', 'user'])
+            ->whereIn('status', ['pending', 'approved'])
+            ->where('reservation_date', '>=', Carbon::today())
+            ->orderBy('reservation_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->take(10) // Limit to 10 upcoming reservations
+            ->get();
+
+        return $reservedRooms;
     }
 }

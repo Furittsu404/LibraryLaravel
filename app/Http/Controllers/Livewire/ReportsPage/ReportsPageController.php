@@ -11,7 +11,7 @@ class ReportsPageController extends Component
 {
     use WithPagination;
 
-    public $title = 'Reports Management';
+    public $title = 'LISO - Reports';
     public $activePage = 'reports';
 
     // Filter properties
@@ -35,6 +35,8 @@ class ReportsPageController extends Component
 
     public function mount()
     {
+        session(['title' => $this->title]);
+
         // Load available courses
         $this->availableCourses = DB::table('users')
             ->whereNotNull('course')
@@ -475,11 +477,11 @@ class ReportsPageController extends Component
     {
         $sections = [
             'entrance' => 'Entrance',
-            'serials' => 'Serials & Reference',
+            'periodicals' => 'Periodicals',
             'humanities' => 'Humanities',
             'multimedia' => 'Multimedia',
-            'filipiniana' => 'Filipiniana & Theses',
-            'relegation' => 'Relegation',
+            'filipiniana' => 'Filipiniana',
+            'makers' => 'Maker Space',
             'science' => 'Science & Technology'
         ];
 

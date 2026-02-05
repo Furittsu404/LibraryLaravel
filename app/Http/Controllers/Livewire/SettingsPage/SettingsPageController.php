@@ -11,6 +11,7 @@ use App\Models\Setting;
 
 class SettingsPageController extends Component
 {
+    public $title = 'LISO - Settings';
     public $defaultExpirationDate;
     public $autoLogoutTime;
 
@@ -23,6 +24,8 @@ class SettingsPageController extends Component
 
     public function mount()
     {
+        session(['title' => $this->title]);
+
         // Load current settings from database
         $this->loadSettings();
 

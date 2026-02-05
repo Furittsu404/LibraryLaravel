@@ -13,7 +13,7 @@ class ArchivePageController extends Component
 {
     use WithPagination;
 
-    public $title = 'Archive Management';
+    public $title = 'LISO - Archive';
     protected $users = [];
     protected $courses = [];
     public $sex;
@@ -22,6 +22,11 @@ class ArchivePageController extends Component
     public $search;
 
     protected $listeners = ['userUpdated' => '$refresh', 'userActivated' => '$refresh', 'userDeleted' => '$refresh'];
+
+    public function mount()
+    {
+        session(['title' => $this->title]);
+    }
 
     public function render()
     {

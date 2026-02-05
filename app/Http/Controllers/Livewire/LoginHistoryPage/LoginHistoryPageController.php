@@ -11,7 +11,7 @@ class LoginHistoryPageController extends Component
 {
     use WithPagination;
 
-    public $title = 'Login History';
+    public $title = 'LISO - Login History';
     public $sex = '';
     public $course = '';
     public $userType = '';
@@ -20,6 +20,11 @@ class LoginHistoryPageController extends Component
     public $endDate = '';
 
     protected $listeners = ['loginDeleted' => '$refresh'];
+
+    public function mount()
+    {
+        session(['title' => $this->title]);
+    }
 
     public function render()
     {
