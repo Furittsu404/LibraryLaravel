@@ -72,7 +72,7 @@ ORDER BY user_id, login_time;
 
 
 -- ============================================================================
--- STEP 4: EXPORT AND IMPORT TO LIBRARYLARAVEL DATABASE
+-- DO NOT RUN!!! FINAL STEP!!! EXPORT AND IMPORT TO LIBRARYLARAVEL DATABASE
 -- ============================================================================
 -- After running the above steps and verifying the data, use this command
 -- to copy all attendance records from this database to your Laravel database.

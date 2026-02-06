@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\File;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceReportExport;
+use App\Models\Section;
 use Barryvdh\DomPDF\Facade\Pdf;
 use ZipArchive;
 use Symfony\Component\Process\Process;
@@ -193,6 +194,9 @@ class ReportExportController extends Controller
         return [
             'startDate' => $startDateTime->format('F d, Y h:i A'),
             'endDate' => $endDateTime->format('F d, Y h:i A'),
+            'sectionName' => $filters['sectionName']
+                ?? $this->mapSectionCodeToName($filters['librarySection'] ?? null)
+                ?? 'All Sections',
             'filters' => [
                 'courses' => $filters['selectedCourses'] ?? [],
                 'sex' => $filters['sex'] ?? '',
@@ -421,5 +425,15 @@ class ReportExportController extends Controller
         }
 
         rmdir($dir);
+    }
+
+    private function mapSectionCodeToName($sectionCode)
+    {
+        if (empty($sectionCode)) {
+            return null;
+        }
+
+        $section = Section::where('code', $sectionCode)->first();
+        return $section ? $section->name : null;
     }
 }
