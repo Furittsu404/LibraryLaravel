@@ -1,34 +1,49 @@
 -- ============================================================================
--- ATTENDANCE DATA MIGRATION SQL COMMANDS (REVISED)
+-- ATTENDANCE DATA MIGRATION SQL COMMANDS
 -- ============================================================================
--- This file contains SQL commands to migrate attendance data from
+-- Single-paste execution script to migrate attendance data from
 -- attendance_records table into attendance table, inferring logout times
 -- based on the next login record for each user on the same day.
+--
+-- This captures ALL login records (even those seconds apart).
+-- Simply copy and paste this entire section into phpMyAdmin and click "Go".
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
--- STEP 1: Add login_time column to attendance_records table
+-- STEP 1: Create attendance table
 -- ----------------------------------------------------------------------------
--- Add the new nullable login_time column
+DROP TABLE IF EXISTS attendance;
+
+CREATE TABLE IF NOT EXISTS attendance (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    library_section VARCHAR(50) NOT NULL DEFAULT 'entrance',
+    login_time DATETIME NOT NULL,
+    logout_time DATETIME NULL,
+    created_at TIMESTAMP NULL DEFAULT NULL,
+    updated_at TIMESTAMP NULL DEFAULT NULL,
+    INDEX idx_attendance_user_id (user_id),
+    INDEX idx_attendance_library_section (library_section),
+    INDEX idx_attendance_login_time (login_time),
+    INDEX idx_attendance_logout_time (logout_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
+-- STEP 2: Add login_time column to attendance_records table
+-- ----------------------------------------------------------------------------
 ALTER TABLE attendance_records
-ADD COLUMN login_time DATETIME NULL;
+ADD COLUMN IF NOT EXISTS login_time DATETIME NULL;
 
 -- Combine date_login and time_login into login_time
 UPDATE attendance_records
-SET login_time = CONCAT(date_login, ' ', time_login)
-WHERE date_login IS NOT NULL AND time_login IS NOT NULL;
-
--- Optional: Check progress
-SELECT COUNT(*) FROM attendance_records WHERE login_time IS NULL;
-
+SET login_time = CONCAT(date, ' ', time)
+WHERE date IS NOT NULL AND time IS NOT NULL AND login_time IS NULL;
 
 -- ----------------------------------------------------------------------------
--- STEP 2: Clear and populate attendance table with inferred logout times
+-- STEP 3: Clear and populate attendance table with ALL login records
 -- ----------------------------------------------------------------------------
--- Clear the attendance table first if you need to redo it
 TRUNCATE TABLE attendance;
 
--- Insert attendance records with logout times inferred from next login
 INSERT INTO attendance (user_id, login_time, logout_time, created_at)
 SELECT
     user_id,
@@ -45,24 +60,52 @@ FROM (
         LEAD(login_time) OVER (
             PARTITION BY user_id, DATE(login_time)
             ORDER BY login_time
-        ) as next_login_time,
-        ROW_NUMBER() OVER (
-            PARTITION BY user_id, DATE(login_time)
-            ORDER BY login_time
-        ) as login_sequence
+        ) as next_login_time
     FROM attendance_records
     WHERE login_time IS NOT NULL
 ) subquery
--- Only keep records where there's a gap to the next login or it's the last login of the day
-WHERE next_login_time IS NULL
-   OR TIMESTAMPDIFF(MINUTE, login_time, next_login_time) >= 5
 ORDER BY user_id, login_time;
 
+-- ============================================================================
+-- MIGRATION COMPLETE - Data has been migrated successfully!
+-- ============================================================================
 
--- ----------------------------------------------------------------------------
--- STEP 3: Verification Queries
--- ----------------------------------------------------------------------------
--- Check the results
+
+-- ============================================================================
+-- STEP 4: EXPORT AND IMPORT TO LIBRARYLARAVEL DATABASE
+-- ============================================================================
+-- After running the above steps and verifying the data, use this command
+-- to copy all attendance records from this database to your Laravel database.
+--
+-- IMPORTANT: Run this query on the OLD database (library_filipiniana).
+-- It will insert the records into the LibraryLaravel database.
+-- Make sure both databases are on the same MySQL server.
+-- ============================================================================
+
+INSERT INTO librarylaravel.attendance (user_id, library_section, login_time, logout_time, created_at, updated_at)
+SELECT
+    user_id,
+    library_section,
+    login_time,
+    logout_time,
+    created_at,
+    updated_at
+FROM attendance
+ORDER BY login_time;
+
+-- ============================================================================
+-- DATA TRANSFER COMPLETE!
+-- ============================================================================
+
+
+-- ============================================================================
+-- OPTIONAL: VERIFICATION QUERIES
+-- ============================================================================
+-- Run these queries separately to verify the migration was successful.
+-- Copy and paste each query individually into phpMyAdmin to check results.
+-- ============================================================================
+
+-- Check total records migrated
 SELECT COUNT(*) as total_records FROM attendance;
 
 -- Check for records without logout_time (should be 0)
@@ -91,7 +134,7 @@ SELECT COUNT(*) as invalid_records
 FROM attendance
 WHERE logout_time < login_time;
 
--- View users with multiple logins on the same day (to verify logic)
+-- View users with multiple logins on the same day
 SELECT
     user_id,
     DATE(login_time) as date,
@@ -109,36 +152,14 @@ ORDER BY user_id, login_time
 LIMIT 100;
 
 
--- ----------------------------------------------------------------------------
--- ALTERNATIVE: If you want ALL login records (including very close ones)
--- ----------------------------------------------------------------------------
--- Use this version if you want to capture every single login, even if they're
--- just seconds apart. The version above filters out logins that are within
--- 5 minutes of each other to avoid capturing accidental double-scans.
+-- ============================================================================
+-- OPTIONAL: CLEANUP
+-- ============================================================================
+-- Only run this after verifying all data is correct!
+-- This will remove the old date_login and time_login columns.
+-- ============================================================================
 
-TRUNCATE TABLE attendance;
-
- INSERT INTO attendance (user_id, login_time, logout_time, created_at)
- SELECT
-     user_id,
-     login_time,
-     COALESCE(
-         next_login_time,
-         CONCAT(DATE(login_time), ' 17:00:00')
-     ) as logout_time,
-     login_time as created_at
- FROM (
-     SELECT
-         user_id,
-         login_time,
-         LEAD(login_time) OVER (
-             PARTITION BY user_id, DATE(login_time)
-             ORDER BY login_time
-         ) as next_login_time
-     FROM attendance_records
-     WHERE login_time IS NOT NULL
- ) subquery
- ORDER BY user_id, login_time;
+-- ALTER TABLE attendance_records DROP COLUMN date_login, DROP COLUMN time_login;
 
 
 -- ----------------------------------------------------------------------------
