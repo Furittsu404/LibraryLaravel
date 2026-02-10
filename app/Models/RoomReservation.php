@@ -14,13 +14,18 @@ class RoomReservation extends Model
         'start_time',
         'end_time',
         'purpose',
-        'status'
+        'participant_count',
+        'participant_ids',
+        'participant_names',
+        'status',
     ];
 
     protected $casts = [
         'reservation_date' => 'date',
         'user_id' => 'integer',
-        'room_id' => 'integer'
+        'room_id' => 'integer',
+        'participant_names' => 'array',
+        'participant_ids' => 'array',
     ];
 
     /**

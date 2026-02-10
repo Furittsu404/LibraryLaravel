@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\User;
 use App\Models\Archive;
 use App\Models\Attendance;
-use App\Models\Admin;
 use App\Models\Setting;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -33,14 +32,14 @@ class ScannerController extends Controller
             'currentSection' => $currentSection,
             'sectionName' => $sectionName,
             'recentLogins' => $recentLogins,
-            'activeUsers' => $activeUsers
+            'activeUsers' => $activeUsers,
         ]);
     }
 
     public function scan(Request $request)
     {
         $request->validate([
-            'barcode' => 'required|string'
+            'barcode' => 'required|string',
         ]);
 
         $barcode = $request->barcode;
@@ -48,7 +47,7 @@ class ScannerController extends Controller
         // Find user by barcode (student ID)
         $user = User::where('barcode', $barcode)->first();
 
-        if (!$user) {
+        if (! $user) {
             // Check if user is in archive
             $archivedUser = Archive::where('barcode', $barcode)->first();
 
@@ -57,14 +56,14 @@ class ScannerController extends Controller
                     'success' => false,
                     'message' => 'Account Archived!',
                     'description' => 'Please go to the Multimedia Section to re-activate your account.',
-                    'type' => 'archived'
+                    'type' => 'archived',
                 ]);
             }
 
             return response()->json([
                 'success' => false,
                 'message' => 'Student ID not found. Please register first.',
-                'type' => 'error'
+                'type' => 'error',
             ]);
         }
 
@@ -73,7 +72,7 @@ class ScannerController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Account is inactive. Please contact the librarian.',
-                'type' => 'error'
+                'type' => 'error',
             ]);
         }
 
@@ -82,7 +81,7 @@ class ScannerController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Account has expired. Please renew your library access.',
-                'type' => 'error'
+                'type' => 'error',
             ]);
         }
 
@@ -110,7 +109,7 @@ class ScannerController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'You have already logged in at the Entrance. Please log out first before logging in again.',
-                    'type' => 'error'
+                    'type' => 'error',
                 ]);
             } else {
                 $user->user_status = 'outside';
@@ -118,7 +117,7 @@ class ScannerController extends Controller
             }
 
             if ($currentSection === 'exit') {
-                //Log out the user from all sections
+                // Log out the user from all sections
                 $loginsToLogout = Attendance::where('user_id', $user->id)
                     ->whereNull('logout_time')
                     ->get();
@@ -127,15 +126,16 @@ class ScannerController extends Controller
                     $login->save();
                 }
                 $loginCount = $loginsToLogout->count();
+
                 return response()->json([
                     'success' => true,
-                    'message' => 'Goodbye, ' . $user->fname . '! You have been logged out from ' . $loginCount . ' section(s).',
+                    'message' => 'Goodbye, '.$user->fname.'! You have been logged out from '.$loginCount.' section(s).',
                     'type' => 'logout',
                     'user' => [
-                        'name' => $user->fname . ' ' . $user->lname,
+                        'name' => $user->fname.' '.$user->lname,
                         'course' => $user->course,
                         'user_type' => ucfirst($user->user_type),
-                    ]
+                    ],
                 ]);
             } else {
                 // Log out the user
@@ -145,20 +145,20 @@ class ScannerController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Goodbye, ' . $user->fname . '! Logged out successfully.',
+                'message' => 'Goodbye, '.$user->fname.'! Logged out successfully.',
                 'type' => 'logout',
                 'user' => [
-                    'name' => $user->fname . ' ' . $user->lname,
+                    'name' => $user->fname.' '.$user->lname,
                     'course' => $user->course,
                     'user_type' => ucfirst($user->user_type),
-                ]
+                ],
             ]);
         } else {
             if ($currentSection === 'exit') {
                 return response()->json([
                     'success' => false,
                     'message' => 'You are not logged in at the Entrance. Please log in first before logging out.',
-                    'type' => 'error'
+                    'type' => 'error',
                 ]);
             }
             // Log in the user
@@ -174,14 +174,14 @@ class ScannerController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Welcome, ' . $user->fname . '! Logged in successfully.',
+                'message' => 'Welcome, '.$user->fname.'! Logged in successfully.',
                 'type' => 'login',
                 'user' => [
-                    'name' => $user->fname . ' ' . $user->lname,
+                    'name' => $user->fname.' '.$user->lname,
                     'course' => $user->course,
                     'user_type' => ucfirst($user->user_type),
-                    'login_time' => now()->format('h:i A')
-                ]
+                    'login_time' => now()->format('h:i A'),
+                ],
             ]);
         }
     }
@@ -200,14 +200,14 @@ class ScannerController extends Controller
         return response()->json([
             'success' => true,
             'logins' => $recentLogins,
-            'activeUsers' => $activeUsers
+            'activeUsers' => $activeUsers,
         ]);
     }
 
     public function setSection(Request $request)
     {
         $request->validate([
-            'section' => 'required|string'
+            'section' => 'required|string',
         ]);
 
         session(['scanner_section' => $request->section]);
@@ -215,7 +215,7 @@ class ScannerController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Section changed successfully',
-            'sectionName' => $this->getSectionName($request->section)
+            'sectionName' => $this->getSectionName($request->section),
         ]);
     }
 
@@ -223,7 +223,12 @@ class ScannerController extends Controller
     {
         $today = Carbon::today();
         $section = $section === 'exit' ? 'entrance' : $section;
-        return DB::table('attendance')
+
+        // Check if we should filter by auto-logout time
+        $autoLogoutTime = Setting::get('auto_logout_time', '17:00');
+        $currentTime = Carbon::now()->format('H:i');
+
+        $query = DB::table('attendance')
             ->join('users', 'attendance.user_id', '=', 'users.id')
             ->select(
                 'users.fname',
@@ -234,17 +239,25 @@ class ScannerController extends Controller
                 'attendance.logout_time'
             )
             ->where('attendance.library_section', $section)
-            ->whereDate('attendance.login_time', $today)
+            ->whereDate('attendance.login_time', $today);
+
+        // If current time is past auto-logout time, only show logins after that time
+        if ($currentTime >= $autoLogoutTime) {
+            $autoLogoutDateTime = Carbon::today()->setTimeFromTimeString($autoLogoutTime);
+            $query->where('attendance.login_time', '>=', $autoLogoutDateTime);
+        }
+
+        return $query
             ->orderBy('attendance.updated_at', 'desc')
             ->limit(15)
             ->get()
             ->map(function ($login) {
                 return [
-                    'name' => $login->fname . ' ' . $login->lname,
+                    'name' => $login->fname.' '.$login->lname,
                     'course' => $login->course,
                     'user_type' => ucfirst($login->user_type),
                     'login_time' => Carbon::parse($login->login_time)->format('h:i A'),
-                    'status' => $login->logout_time ? 'logged_out' : 'logged_in'
+                    'status' => $login->logout_time ? 'logged_out' : 'logged_in',
                 ];
             });
     }
@@ -259,7 +272,7 @@ class ScannerController extends Controller
             'multimedia' => 'Multimedia',
             'filipiniana' => 'Filipiniana',
             'makers' => 'Maker Space',
-            'science' => 'Science & Technology'
+            'science' => 'Science & Technology',
         ];
 
         return $sections[$code] ?? 'Unknown Section';
@@ -268,16 +281,16 @@ class ScannerController extends Controller
     public function verifyAdminPassword(Request $request)
     {
         $request->validate([
-            'password' => 'required|string'
+            'password' => 'required|string',
         ]);
 
         // Get scanner password from settings
         $scannerPasswordHash = Setting::get('scanner_password');
 
-        if (!$scannerPasswordHash) {
+        if (! $scannerPasswordHash) {
             return response()->json([
                 'success' => false,
-                'message' => 'Scanner password has not been set. Please contact an administrator.'
+                'message' => 'Scanner password has not been set. Please contact an administrator.',
             ]);
         }
 
@@ -285,12 +298,12 @@ class ScannerController extends Controller
         if (Hash::check($request->password, $scannerPasswordHash)) {
             return response()->json([
                 'success' => true,
-                'message' => 'Password verified successfully.'
+                'message' => 'Password verified successfully.',
             ]);
         } else {
             return response()->json([
                 'success' => false,
-                'message' => 'Incorrect password. Please try again.'
+                'message' => 'Incorrect password. Please try again.',
             ]);
         }
     }

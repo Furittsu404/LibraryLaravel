@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Livewire\StudentReservationPage;
 
 use App\Http\Controllers\Controller;
+use App\Models\BlockedTimeSlot;
 use App\Models\Room;
 use App\Models\RoomReservation;
-use App\Models\BlockedTimeSlot;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class StudentReservationController extends Controller
@@ -19,6 +19,7 @@ class StudentReservationController extends Controller
     public function index()
     {
         $rooms = Room::where('is_available', true)->get();
+
         return view('student.reservations', compact('rooms'));
     }
 
@@ -30,7 +31,7 @@ class StudentReservationController extends Controller
         $validated = $request->validate([
             'room_id' => 'required|exists:rooms,id',
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date'
+            'end_date' => 'required|date|after_or_equal:start_date',
         ]);
 
         $room = Room::findOrFail($validated['room_id']);
@@ -93,7 +94,7 @@ class StudentReservationController extends Controller
                 $dateSlots[] = [
                     'start_time' => $startTime,
                     'end_time' => $endTime,
-                    'status' => $status
+                    'status' => $status,
                 ];
             }
 
@@ -104,7 +105,7 @@ class StudentReservationController extends Controller
         return response()->json([
             'success' => true,
             'room' => $room,
-            'slots' => $slots
+            'slots' => $slots,
         ]);
     }
 
@@ -120,7 +121,12 @@ class StudentReservationController extends Controller
                 'reservation_date' => 'required|date|after_or_equal:today',
                 'start_time' => 'required|date_format:H:i',
                 'end_time' => 'required|date_format:H:i|after:start_time',
-                'purpose' => 'required|string|max:500'
+                'purpose' => 'required|string|max:500',
+                'participant_count' => 'nullable|integer|min:0|max:40',
+                'participant_names' => 'nullable|array|max:40',
+                'participant_names.*' => 'required|string|max:255',
+                'participant_ids' => 'nullable|array|max:40',
+                'participant_ids.*' => 'nullable|string|max:100',
             ]);
 
             // Check if user exists by barcode
@@ -128,7 +134,7 @@ class StudentReservationController extends Controller
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Student ID not found. Please check your student/school ID.'
+                    'message' => 'Student ID not found. Please check your student/school ID.',
                 ]);
             }
 
@@ -138,7 +144,7 @@ class StudentReservationController extends Controller
             if (!$room->isAvailableAt($validated['reservation_date'], $validated['start_time'], $validated['end_time'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'This time slot is no longer available. Please select another time.'
+                    'message' => 'This time slot is no longer available. Please select another time.',
                 ]);
             }
 
@@ -150,13 +156,16 @@ class StudentReservationController extends Controller
                 'start_time' => $validated['start_time'],
                 'end_time' => $validated['end_time'],
                 'purpose' => $validated['purpose'],
-                'status' => 'pending'
+                'status' => 'pending',
+                'participant_count' => $validated['participant_count'] ?? 0,
+                'participant_names' => $validated['participant_names'] ?? [],
+                'participant_ids' => $validated['participant_ids'] ?? [],
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Reservation submitted successfully! Your reservation is pending approval.',
-                'reservation' => $reservation->load('room', 'user')
+                'reservation' => $reservation->load('room', 'user'),
             ]);
         } catch (ValidationException $e) {
             $errors = $e->errors();
@@ -166,7 +175,7 @@ class StudentReservationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $message,
-                'errors' => $errors
+                'errors' => $errors,
             ]);
         }
     }

@@ -150,7 +150,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Student
                                 Name</label>
-                            <input type="text" :value="currentReservation?.user?.name || 'N/A'" disabled
+                            <input type="text" :value="currentReservation?.name || 'N/A'" disabled
                                 class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white cursor-not-allowed">
                         </div>
                         <div>
@@ -212,6 +212,106 @@
                         <textarea x-model="editData.purpose" rows="3" :disabled="!editMode"
                             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white resize-none"
                             :class="!editMode ? 'bg-gray-50 dark:bg-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-800'"></textarea>
+                    </div>
+
+                    {{-- Participants Section --}}
+                    <div x-show="(currentReservation?.participant_count > 0) || (editData.participant_count > 0)"
+                        class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Participants (<span
+                                    x-text="editMode ? editData.participant_count : (currentReservation?.participant_count || 0)"></span>)
+                            </label>
+                        </div>
+
+                        {{-- Display Mode (Read-only) --}}
+                        <div x-show="!editMode" class="space-y-2 max-h-64 overflow-y-auto">
+                            <template x-for="(participant, index) in editData.participants" :key="index">
+                                <div x-show="participant.name"
+                                    class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900 dark:text-white"
+                                            x-text="participant.name"></div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400"
+                                            x-text="participant.id || 'No ID provided'"></div>
+                                    </div>
+                                    <span class="text-xs text-gray-500 font-mono" x-text="`#${index + 1}`"></span>
+                                </div>
+                            </template>
+
+                            <div x-show="!editData.participants || editData.participants.length === 0 || editData.participants.every(p => !p.name)"
+                                class="text-center py-8 text-gray-400">
+                                No participants listed
+                            </div>
+                        </div>
+
+                        {{-- Edit Mode (Editable) --}}
+                        <div x-show="editMode" class="space-y-3">
+                            {{-- Participant Count Input --}}
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Number of Participants
+                                </label>
+                                <input type="number" x-model.number="editData.participant_count"
+                                    @input="updateParticipantFields()" min="1" max="40"
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500">
+                            </div>
+
+                            {{-- Participant Fields --}}
+                            <div class="max-h-96 overflow-y-auto space-y-3 pr-2">
+                                <template x-for="(participant, index) in editData.participants"
+                                    :key="index">
+                                    <div
+                                        class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300"
+                                                x-text="`Participant ${index + 1}`"></span>
+                                            <button x-show="editData.participant_count > 1"
+                                                @click="removeParticipant(index)" type="button"
+                                                class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                                                    class="w-5 h-5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <div>
+                                                <label
+                                                    class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                                    Name <span class="text-red-500">*</span>
+                                                </label>
+                                                <input type="text" x-model="editData.participants[index].name"
+                                                    required placeholder="Full Name"
+                                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-500 rounded-lg bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500">
+                                            </div>
+
+                                            <div>
+                                                <label
+                                                    class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                                    Student/Employee ID <span class="text-gray-400">(Optional)</span>
+                                                </label>
+                                                <input type="text" x-model="editData.participants[index].id"
+                                                    placeholder="ID Number"
+                                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-500 rounded-lg bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <button x-show="editData.participant_count < 40" @click="addParticipant()" type="button"
+                                class="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-lg hover:border-green-500 hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                </svg>
+                                Add Another Participant
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -496,7 +596,9 @@
                 status: '',
                 reservation_date: '',
                 time_slot: '',
-                purpose: ''
+                purpose: '',
+                participant_count: 0,
+                participants: []
             },
 
             // Block Data
@@ -741,15 +843,40 @@
                 const endTime = reservation.end_time.substring(0, 5);
                 const timeSlot = `${startTime}-${endTime}`;
 
+                // Prepare participants data - handle both array and non-array cases
+                let participantNames = reservation.raw.participant_names;
+                let participantIds = reservation.raw.participant_ids;
+                const participantCount = reservation.raw.participant_count || 0;
+
+                // Ensure arrays (handle null, undefined, or already parsed JSON)
+                if (!Array.isArray(participantNames)) {
+                    participantNames = participantNames ? (typeof participantNames === 'string' ? JSON.parse(
+                        participantNames) : []) : [];
+                }
+                if (!Array.isArray(participantIds)) {
+                    participantIds = participantIds ? (typeof participantIds === 'string' ? JSON.parse(participantIds) :
+                        []) : [];
+                }
+
+                const participants = participantNames.map((name, index) => ({
+                    name: name || '',
+                    id: participantIds[index] || ''
+                }));
+
                 // Use the already-transformed date from reservation.date instead of raw
-                // This ensures we get the correct date without timezone issues
                 this.editData = {
                     room_name: reservation.room_name,
                     status: reservation.raw.status,
-                    reservation_date: reservation.date, // Use the transformed date
+                    reservation_date: reservation.date,
                     time_slot: timeSlot,
-                    purpose: reservation.raw.purpose
+                    purpose: reservation.raw.purpose,
+                    participant_count: participantCount,
+                    participants: participants.length > 0 ? participants : [{
+                        name: '',
+                        id: ''
+                    }]
                 };
+
                 this.showReservationModal = true;
             },
 
@@ -765,15 +892,44 @@
 
             cancelEdit() {
                 this.editMode = false;
-                // Restore original data
+
+                // Restore original data including participants
                 if (this.currentReservation) {
+                    const startTime = this.currentReservation.start_time.substring(0, 5);
+                    const endTime = this.currentReservation.end_time.substring(0, 5);
+                    const timeSlot = `${startTime}-${endTime}`;
+
+                    // Prepare participants data - same logic as openReservationModal
+                    let participantNames = this.currentReservation.participant_names;
+                    let participantIds = this.currentReservation.participant_ids;
+                    const participantCount = this.currentReservation.participant_count || 0;
+
+                    // Ensure arrays
+                    if (!Array.isArray(participantNames)) {
+                        participantNames = participantNames ? (typeof participantNames === 'string' ? JSON.parse(
+                            participantNames) : []) : [];
+                    }
+                    if (!Array.isArray(participantIds)) {
+                        participantIds = participantIds ? (typeof participantIds === 'string' ? JSON.parse(
+                            participantIds) : []) : [];
+                    }
+
+                    const participants = participantNames.map((name, index) => ({
+                        name: name || '',
+                        id: participantIds[index] || ''
+                    }));
+
                     this.editData = {
                         room_name: this.currentReservation.room.name,
                         status: this.currentReservation.status,
                         reservation_date: this.currentReservation.reservation_date.split('T')[0],
-                        start_time: this.currentReservation.start_time,
-                        end_time: this.currentReservation.end_time,
-                        purpose: this.currentReservation.purpose
+                        time_slot: timeSlot,
+                        purpose: this.currentReservation.purpose,
+                        participant_count: participantCount,
+                        participants: participants.length > 0 ? participants : [{
+                            name: '',
+                            id: ''
+                        }]
                     };
                 }
             },
@@ -880,13 +1036,68 @@
                 }
             },
 
+            updateParticipantFields() {
+                const count = Math.min(Math.max(this.editData.participant_count, 1), 40);
+                const currentLength = this.editData.participants.length;
+
+                if (count > currentLength) {
+                    // Add new participants
+                    for (let i = currentLength; i < count; i++) {
+                        this.editData.participants.push({
+                            name: '',
+                            id: ''
+                        });
+                    }
+                } else if (count < currentLength) {
+                    // Remove excess participants
+                    this.editData.participants = this.editData.participants.slice(0, count);
+                }
+            },
+
+            addParticipant() {
+                if (this.editData.participant_count < 40) {
+                    this.editData.participant_count++;
+                    this.editData.participants.push({
+                        name: '',
+                        id: ''
+                    });
+                }
+            },
+
+            removeParticipant(index) {
+                if (this.editData.participant_count > 1) {
+                    this.editData.participants.splice(index, 1);
+                    this.editData.participant_count--;
+                }
+            },
+
+
             async saveReservation() {
                 if (this.saving) return;
                 this.saving = true;
 
                 try {
+                    // Validate that all participants have names if there are any
+                    if (this.editData.participant_count > 0) {
+                        const hasEmptyNames = this.editData.participants.some(p => !p.name || p.name.trim() === '');
+                        if (hasEmptyNames) {
+                            window.dispatchEvent(new CustomEvent('show-toast', {
+                                detail: {
+                                    type: 'error',
+                                    message: 'Please fill in all participant names'
+                                }
+                            }));
+                            this.saving = false;
+                            return;
+                        }
+                    }
+
                     // Split time_slot into start_time and end_time
                     const [start_time, end_time] = this.editData.time_slot.split('-');
+
+                    // Prepare participant data
+                    const participant_names = this.editData.participants.map(p => p.name);
+                    const participant_ids = this.editData.participants.map(p => p.id || null);
 
                     const response = await fetch(
                         `/reserved-rooms/reservation/${this.currentReservation.id}/update`, {
@@ -900,7 +1111,10 @@
                                 reservation_date: this.editData.reservation_date,
                                 start_time: start_time,
                                 end_time: end_time,
-                                purpose: this.editData.purpose
+                                purpose: this.editData.purpose,
+                                participant_count: this.editData.participant_count,
+                                participant_names: participant_names,
+                                participant_ids: participant_ids
                             })
                         });
 

@@ -8,6 +8,10 @@ window.reservationApp = function (rooms) {
         purpose: "",
         submitting: false,
 
+        // Participant fields
+        participant_count: 0,
+        participants: [],
+
         // Calendar state
         currentMonth: null,
         currentYear: null,
@@ -225,11 +229,75 @@ window.reservationApp = function (rooms) {
             this.currentStep = 2;
         },
 
+        updateParticipantFields() {
+            const count = Math.min(Math.max(this.participant_count, 0), 40);
+            const currentLength = this.participants.length;
+
+            if (count > currentLength) {
+                // Add new participants
+                for (let i = currentLength; i < count; i++) {
+                    this.participants.push({
+                        name: "",
+                        id: "",
+                    });
+                }
+            } else if (count < currentLength) {
+                // Remove excess participants
+                this.participants = this.participants.slice(0, count);
+            }
+        },
+
+        addParticipant() {
+            if (this.participant_count < 40) {
+                this.participant_count++;
+                this.participants.push({
+                    name: "",
+                    id: "",
+                });
+            }
+        },
+
+        removeParticipant(index) {
+            if (this.participant_count > 0) {
+                this.participants.splice(index, 1);
+                this.participant_count--;
+            }
+        },
+
         async submitReservation() {
             if (this.submitting) return;
+
+            // Validate participant names if count > 0
+            if (this.participant_count > 0) {
+                const hasEmptyNames = this.participants.some(
+                    (p) => !p.name || p.name.trim() === "",
+                );
+                if (hasEmptyNames) {
+                    window.dispatchEvent(
+                        new CustomEvent("show-toast", {
+                            detail: {
+                                type: "error",
+                                message: "Please fill in all participant names",
+                            },
+                        }),
+                    );
+                    return;
+                }
+            }
+
             this.submitting = true;
 
             try {
+                // Prepare participant data
+                const participant_names =
+                    this.participant_count > 0
+                        ? this.participants.map((p) => p.name)
+                        : [];
+                const participant_ids =
+                    this.participant_count > 0
+                        ? this.participants.map((p) => p.id || null)
+                        : [];
+
                 const response = await fetch("/reservations/create", {
                     method: "POST",
                     headers: {
@@ -245,6 +313,9 @@ window.reservationApp = function (rooms) {
                         start_time: this.selectedStartTime,
                         end_time: this.selectedEndTime,
                         purpose: this.purpose,
+                        participant_count: this.participant_count,
+                        participant_names: participant_names,
+                        participant_ids: participant_ids,
                     }),
                 });
 
@@ -269,6 +340,8 @@ window.reservationApp = function (rooms) {
                     this.selectedEndTime = null;
                     this.barcode = "";
                     this.purpose = "";
+                    this.participant_count = 0;
+                    this.participants = [];
                 } else {
                     window.dispatchEvent(
                         new CustomEvent("show-toast", {
