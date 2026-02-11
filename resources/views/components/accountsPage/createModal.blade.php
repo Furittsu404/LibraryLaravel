@@ -167,7 +167,7 @@
                         <option value="">Select Course</option>
                         <option value="BSAb">BSAb</option>
                         <option value="BSA">BSA</option>
-                        <option value="BSFil">BAFil</option>
+                        <option value="BAFil">BAFil</option>
                         <option value="BALit">BALit</option>
                         <option value="BAIS">BAIS</option>
                         <option value="BASS">BASS</option>
