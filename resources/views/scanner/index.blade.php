@@ -306,7 +306,6 @@
                                     <div class="flex-1 min-w-0">
                                         <p class="font-semibold text-gray-900 text-sm truncate" x-text="login.name">
                                         </p>
-                                        <p class="text-xs text-gray-600 truncate" x-text="login.course"></p>
                                         <div class="flex items-center gap-2 mt-1">
                                             <span class="text-xs text-gray-500" x-text="login.login_time"></span>
                                             <span class="text-xs px-2 py-0.5 rounded-full font-medium"
