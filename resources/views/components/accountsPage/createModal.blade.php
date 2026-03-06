@@ -131,10 +131,11 @@
             </div>
 
             <div class="mb-4 flex gap-4">
-                <!-- Phone -->
+                <!-- Barcode/ID -->
                 <div class="flex-1">
-                    <label class="block text-gray-700 dark:text-gray-300 font-medium mb-2">Phone Number</label>
-                    <input type="text" x-model="user.phonenumber"
+                    <label class="block text-gray-700 dark:text-gray-300 font-medium mb-2">ID Number <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" x-model="user.barcode" required
                         class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#009639] dark:focus:ring-[#00b347]">
                 </div>
                 <!-- Sex -->
@@ -216,11 +217,10 @@
             </div>
 
             <div class="mb-6 flex gap-4">
-                <!-- Barcode/ID -->
+                <!-- Phone -->
                 <div class="flex-1">
-                    <label class="block text-gray-700 dark:text-gray-300 font-medium mb-2">ID Number <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" x-model="user.barcode" required
+                    <label class="block text-gray-700 dark:text-gray-300 font-medium mb-2">Phone Number</label>
+                    <input type="text" x-model="user.phonenumber"
                         class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#009639] dark:focus:ring-[#00b347]">
                 </div>
                 <!-- User Type -->
