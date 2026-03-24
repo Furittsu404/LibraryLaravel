@@ -1,6 +1,6 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-CgGVG3eq.css",
+    "file": "assets/app-wrNMQVjb.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -15,7 +15,7 @@
     "isEntry": true
   },
   "storage/app/public/images/login-bg.jpg": {
-    "file": "assets/login-bg-CKsIjVL4.jpg",
+    "file": "assets/login-bg-j6g64bnG.jpg",
     "src": "storage/app/public/images/login-bg.jpg"
   }
 }
